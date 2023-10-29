@@ -183,7 +183,7 @@ def calculate_user_distance(user_name):
                  col.startswith("Recent Track Score ")]
     recent_tracks_dict = {track_ids[i]: i for i in range(len(track_ids))}
     user_recent_tracks_array =np.zeros(len(track_ids))
-    for track_id in track_ids:
+    for track_id in user_recent_tracks.keys():
         user_recent_tracks_array[recent_tracks_dict[track_id]] = user_recent_tracks[track_id]
 
     #convert user top tracks to a model input array
@@ -191,7 +191,7 @@ def calculate_user_distance(user_name):
                     col.startswith("Top Track Score ")]
     top_tracks_dict = {track_ids[i]: i for i in range(len(track_ids))}
     user_top_tracks_array = np.zeros(len(track_ids))
-    for track_id in track_ids:
+    for track_id in user_top_tracks.keys():
         user_top_tracks_array[top_tracks_dict[track_id]] = user_top_tracks[track_id]
 
     #convert user top artists to a model input array
@@ -199,7 +199,7 @@ def calculate_user_distance(user_name):
                     col.startswith("Top Artist Score ")]
     top_artists_dict = {artist_ids[i]: i for i in range(len(artist_ids))}
     user_top_artists_array = np.zeros(len(artist_ids))
-    for artist_id in artist_ids:
+    for artist_id in user_top_artists.keys():
         user_top_artists_array[top_artists_dict[artist_id]] = user_top_artists[artist_id]
 
     #convert user tags to a model input array
