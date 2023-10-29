@@ -10,7 +10,7 @@ DROP TABLE IF EXISTS Users;
 DROP TABLE IF EXISTS Artists;
 
 create table Users (
-	user_id BIGINT NOT NULL,
+	user_id BIGINT NOT NULL AUTO_INCREMENT,
     user_name VARCHAR(50) NOT NULL,
     user_url VARCHAR(100) NOT NULL,
     primary key (user_id)
