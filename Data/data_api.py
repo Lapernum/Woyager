@@ -54,8 +54,13 @@ class createUserDataset:
         cnx.commit()
 
         return
+<<<<<<< HEAD
 
 def fetch_high_quality_users(conn):
+=======
+      
+      def fetch_high_quality_users(conn):
+>>>>>>> origin
     """
     Fetches high-quality users from the database
     high-quality users are defined as users who have listened to at least 300 recent tracks (can be repetitive)
