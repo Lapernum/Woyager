@@ -1,7 +1,8 @@
 {
     "API_KEY": "601524a20a9294b649dd49561f64bd53",
-    "SQL_USERNAME": "root",
-    "SQL_PASSWORD": "Alandong!2001",
-    "SQL_HOST": "127.0.0.1",
-    "SQL_DATABASE": "treemusic"
+    "SQL_USERNAME": "Team_37",
+    "SQL_PASSWORD": "GeorgiaTech6242",
+    "SQL_HOST": "music1.mysql.database.azure.com",
+    "SQL_DATABASE": "last_fm",
+    "SQL_SSL_CA": "/Users/ziandong/Downloads/DigiCertGlobalRootG2.crt.pem"
 }
