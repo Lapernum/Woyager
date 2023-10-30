@@ -98,6 +98,70 @@ def api_get_user_feature(user_name):
     """
     raise NotImplementedError
 
+# Fetches user features from API.
+class LastFMAPI:
+    def __self__(self):
+        conf = open("conf.json")
+        conf_data = json.load(conf)
+        self.api_key = conf_data["API_KEY"]
+        self.base_url = 'http://ws.audioscrobbler.com/2.0/'
 
+    def get_recent_tracks(self, username):
+        url = f'{self.base_url}?method=user.getRecentTracks&user={username}&api_key={self.api_key}&format=json'
+        response = requests.get(url)
 
+        if response.status_code == 200:
+            data = response.json()
+            recent_tracks = {}
+            for track in data['recenttracks']['track']:
+                track_name = track['name']
+                timestamp = track['date']['uts']
+                recent_tracks[track_name] = timestamp
+            return recent_tracks
+        else:
+            return None
 
+    def get_top_tracks(self, username):
+        url = f'{self.base_url}?method=user.getTopTracks&user={username}&api_key={self.api_key}&format=json'
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            data = response.json()
+            top_tracks = {}
+            for track in data['toptracks']['track']:
+                track_name = track['name']
+                count = int(track['playcount'])
+                top_tracks[track_name] = count
+            return top_tracks
+        else:
+            return None
+
+    def get_top_artist(self, username):
+        url = f'{self.base_url}?method=user.getTopTracks&user={username}&api_key={self.api_key}&format=json'
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            data = response.json()
+            top_artists = {}
+            for artist in data['topartists']['artist']:
+                artist_name = artist['name']
+                count = int(artist['playcount'])
+                top_artists[artist_name] = count
+            return top_artists
+        else:
+            return None
+    
+    def get_artist_top_tracks(self, artist_name):
+        url = f'{self.base_url}?method=artist.getTopTracks&artist={artist_name}&api_key={self.api_key}&format=json'
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            data = response.json()
+            top_tracks = {}
+            for track in data['toptracks']['track']:
+                track_name = track['name']
+                count = int(track['playcount'])
+                top_tracks[track_name] = count
+            return top_tracks
+        else:
+            return None
