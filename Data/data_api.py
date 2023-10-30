@@ -64,7 +64,7 @@ class createUserDataset:
         cnx.close()
 
         return
-
+      
 def fetch_high_quality_users(conn):
     """
     Fetches high-quality users from the database
