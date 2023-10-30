@@ -4,6 +4,7 @@ use last_fm;
 DROP TABLE IF EXISTS Artist_tag;
 DROP TABLE IF EXISTS Track_tag;
 DROP TABLE IF EXISTS Tags;
+DROP TABLE IF EXISTS Top_artist;
 DROP TABLE IF EXISTS Listening_history;
 DROP TABLE IF EXISTS Top_track;
 DROP TABLE IF EXISTS Tracks;
