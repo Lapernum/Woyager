@@ -66,6 +66,7 @@ create table Tags (
 create table Track_tag (
 	tag_id BIGINT NOT NULL,
     track_id BIGINT NOT NULL,
+    tag_count INTEGER NOT NULL,
     foreign key (tag_id) references Tags(tag_id),
     foreign key (track_id) references Tracks(track_id)
 );
@@ -73,6 +74,7 @@ create table Track_tag (
 create table Artist_tag (
 	tag_id BIGINT NOT NULL,
     artist_id BIGINT NOT NULL,
+    tag_count INTEGER NOT NULL,
     foreign key (tag_id) references Tags(tag_id),
     foreign key (artist_id) references Artists(artist_id)
 );
