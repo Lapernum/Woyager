@@ -102,14 +102,23 @@ class Database:
         self.ssl_ca = conf_data["SQL_SSL_CA"]
 
     def get_recent_tracks(self, user_id):
+
         raise NotImplementedError
+    
     def get_top_tracks(self, user_id):
+
         raise NotImplementedError
+    
     def get_top_artist(self, user_id):
+
         raise NotImplementedError
+    
     def GetAllListeningHistoryTracks(self):
+
         raise NotImplementedError
+    
     def GetAllTopTracks(self):
         raise NotImplementedError
+    
     def GetAllTopArtists(self):
         raise NotImplementedError
