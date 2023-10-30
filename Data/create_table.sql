@@ -1,4 +1,5 @@
-use treemusic;
+use last_fm;
+
 
 DROP TABLE IF EXISTS Artist_tag;
 DROP TABLE IF EXISTS Track_tag;

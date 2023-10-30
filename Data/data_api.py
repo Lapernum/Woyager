@@ -13,43 +13,56 @@ class createUserDataset:
         self.sql_password = conf_data["SQL_PASSWORD"]
         self.sql_host = conf_data["SQL_HOST"]
         self.sql_database = conf_data["SQL_DATABASE"]
-    
+        self.ssl_ca = conf_data["SQL_SSL_CA"]
+
+
     # Return a list of info json of friends
     def get_user_friends(self, username):
-        response = requests.get("https://ws.audioscrobbler.com/2.0/?method=user.getfriends&user= " + username + "&api_key= " + self.api_key + "&format=json")
+        response = requests.get(
+            "https://ws.audioscrobbler.com/2.0/?method=user.getfriends&user= " + username + "&api_key= " + self.api_key + "&format=json")
         data = response.json()
         friends = data["friends"]["user"]
         return friends
-    
-    # Save all the users provided into the database without replicates
+
     def save_users(self, users):
+        config = {
+            'host': self.sql_host,
+            'user': self.sql_username,
+            'password': self.sql_password,
+            'database': self.sql_database,
+            'client_flags': [mysql.connector.ClientFlag.SSL],
+            'ssl_ca': self.ssl_ca
+        }
+
         try:
-            cnx = mysql.connector.connect(user = self.sql_username, password = self.sql_password, host = self.sql_host, database = self.sql_database)
+            cnx = mysql.connector.connect(**config)
         except mysql.connector.Error as err:
             if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-                print("Something is wrong with your user name or password")
+                print("Something is wrong with the user name or password")
             elif err.errno == errorcode.ER_BAD_DB_ERROR:
                 print("Database does not exist")
             else:
                 print(err)
-        
+            return
+
         cnx_cursor = cnx.cursor()
-        
+
         sql_fetch = "SELECT user_name FROM Users"
         cnx_cursor.execute(sql_fetch)
         already_in = cnx_cursor.fetchall()
         already_ins = [a[0] for a in already_in]
-        
+
         user_list = []
         for user in users:
             if user["name"] not in already_ins:
                 user_list.append((user["name"], user["url"]))
-            
+
         sql_save = "INSERT IGNORE INTO Users (user_name, user_url) VALUES (%s, %s)"
-        
-        cnx_cursor.executemany(sql_save, user_list)  
+
+        cnx_cursor.executemany(sql_save, user_list)
         cnx.commit()
-        
+        cnx.close()
+
         return
       
 def fetch_high_quality_users(conn):
@@ -84,4 +97,7 @@ def api_get_user_feature(user_name):
             3. Top artists: Dict {key: artist_name, value: count}
     """
     raise NotImplementedError
-                    
+
+
+
+
