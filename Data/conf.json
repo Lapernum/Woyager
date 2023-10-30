@@ -1,0 +1,8 @@
+{
+    "API_KEY": "601524a20a9294b649dd49561f64bd53",
+    "SQL_USERNAME": "Team_37",
+    "SQL_PASSWORD": "GeorgiaTech6242",
+    "SQL_HOST": "music1.mysql.database.azure.com",
+    "SQL_DATABASE": "last_fm",
+    "SQL_SSL_CA": "/Users/ziandong/Downloads/DigiCertGlobalRootG2.crt.pem"
+}
