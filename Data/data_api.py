@@ -101,10 +101,10 @@ def api_get_user_feature(user_name):
 def get_artist_top_tags(artist):
     '''
     Input:
-    artist: string, name of artist
+        - artist: string, name of artist
 
     Output:
-    From database, output a dict of {tag_id: tag_count} pairs
+        - From database, output a dict of {tag_id: tag_count} pairs
     '''
     raise NotImplementedError
 
