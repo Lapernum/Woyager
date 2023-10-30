@@ -84,7 +84,19 @@ class SelfListening:
         '''
         raise NotImplementedError
     
+    def select_ten(self):
+        '''
+        With the selected tracks, select the top ten with the highest similarity score.
+        The top_tracks and recent_tracks will have lower weight compared to added_tracks.
 
+        Input:
+            - None, just use self.selected()
+        
+        Output:
+            - ten_songs: A list of track_id from database, with length at most 10.
+            - score: A list of similarity scores corresponding to the songs.
+        '''
+        raise NotImplementedError
 
     def select_songs(self, arg=None):
         '''
