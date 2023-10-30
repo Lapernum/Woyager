@@ -1,10 +1,10 @@
 import numpy as np
 import sys
-sys.path.append("../")
-from Data.data_api import createUserDataset
+sys.path.insert(0, "Data")
+import data_api
 
 class SelfListening:
-    def __init__(self):
+    def __init__(self, mode='tag'):
         # The top tracks of the user, list(track_id)
         self.top_track = list()
         # The recent tracks listened by the user, list(track_id)
@@ -13,6 +13,10 @@ class SelfListening:
         self.top_artist = list()
         # The added tracks that is selected by user in the process, list(track_id)
         self.added_track = list()
+        # Mode for the recommend step, either 'tag' or 'artist'
+        self.mode = mode
+        # The selected tracks from select_songs()
+        self.selected = list()
         
     def add_track(self, added_song):
         '''
@@ -25,6 +29,19 @@ class SelfListening:
             - None
         '''
         self.added_track.append(added_song)
+
+    def change_mode(self, mode='artist'):
+        '''
+        Changes mode according to mode variable
+
+        Input:
+            - mode: either 'tag' or 'artist',
+            anythin else will be considered as 'tag'
+        '''
+        if mode == 'artist':
+            self.mode = 'artist'
+        else:
+            self.mode = 'tag'
 
     def tag_sim_score(self, tag_dict1=None, tag_dict2=None):
         '''
@@ -55,7 +72,9 @@ class SelfListening:
     def song_similarity(self, song1=None, song2=None):
         '''
         Given information on 2 songs, return a similarity score between the two songs
-
+            1. Extract the tags of the two songs from database;
+            2. Extract the top tags of the two artists from database;
+            3. Calculate both similarities and sum up to score.
         Input:
             - song1: track id of the first song
             - song2: track id of the second song
@@ -63,7 +82,42 @@ class SelfListening:
         Output:
             - score: a float number representing similarity between two songs
         '''
+        raise NotImplementedError
+    
 
+
+    def select_songs(self, arg=None):
+        '''
+        Select 100 tracks according to the current mode.
+        '''
+        if self.mode == 'tag':
+            self.selected = self.select_tag_songs(arg)
+        else:
+            self.selected = self.select_artist_songs(arg)
+    
+    def select_tag_songs(self, tag=None):
+        '''
+        In 'tag' mode, according to how the selected tag goes with other tags in
+        users' listening history, select songs with grouped tags from database.
+
+        Input:
+            - tag: The target tag selected by the user
+        Output:
+            - songs: A list of track_id from database
+        '''
+        raise NotImplementedError
+    
+    def select_artist_songs(self, artist=None):
+        '''
+        In 'artist' mode, select 100 tracks from the artist's top_tracks through last.fm API.
+
+        Input:
+            - artist: The target artist selected by the user
+        
+        Output:
+            - songs: A list of track_id from last.fm API
+        '''
+        raise NotImplementedError
 
 def main():
     user = SelfListening()
@@ -72,7 +126,7 @@ def main():
     score = user.tag_sim_score(tag1, tag2)
     print(score)
     tag3 = {1: 100, 2: 70, 3: 50}
-    tag4 = {1: 100, 2: 70, 3: 50}
+    tag4 = {1: 100, 2: 80, 3: 40}
     tag5 = {1: 100, 3: 95, 2: 67}
     score2 = user.tag_sim_score(tag3, tag4)
     score3 = user.tag_sim_score(tag4, tag5)
