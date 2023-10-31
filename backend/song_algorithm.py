@@ -17,6 +17,8 @@ class SelfListening:
         self.mode = mode
         # The selected tracks from select_songs()
         self.selected = list()
+        # The top tags from top_track and recent_track, list(tag_id)
+        self.top_tag = list()
         
     def add_track(self, added_song):
         '''
