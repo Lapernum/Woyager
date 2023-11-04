@@ -64,11 +64,7 @@ class createUserDataset:
         cnx.close()
 
         return
-<<<<<<<<< Temporary merge branch 1
-      
-=========
 
->>>>>>>>> Temporary merge branch 2
 def fetch_high_quality_users(conn):
     """
     Fetches high-quality users from the database
