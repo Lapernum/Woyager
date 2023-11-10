@@ -84,9 +84,6 @@ class lastfm_api:
             return top_tracks
         else:
             return None
-        
-    {"Believer": 9000}
-    [{"name": "Believer", "count": 9000}]
 
     def get_track_id(self, track_name, artist_name):
         url = f'{self.base_url}?method=track.getInfo&artist={artist_name}&track={track_name}&api_key={self.api_key}&format=json'
