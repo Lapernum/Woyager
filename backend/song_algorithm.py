@@ -15,7 +15,7 @@ class SelfListening:
         # The top tracks of the user, list(track_id)
         self.top_track = list(self.lastapi.get_top_tracks(user).keys())
         # The recent tracks listened by the user, list(track_id)
-        self.recent = list(self.lastapi.get_recent(user).keys())
+        self.recent = list(self.lastapi.get_recent_tracks(user).keys())
         # The top artists of the user, list(artist_id)
         # currently, dict(artist_name, count)
         self.top_artist = self.lastapi.get_top_artist(user)
@@ -27,7 +27,10 @@ class SelfListening:
         self.selected = list()
 
         # The top tags from top_track and recent_track, list(tag_id)
-        self.top_tag = list()
+        self.top_tag = {}
+        for artist_name, count in self.top_artist.items():
+            artist_tags = self.dbapi.GetArtistTopTags(artist_name)
+
         
         
         
