@@ -6,7 +6,7 @@ from mysql.connector import errorcode
 
 # Fetches user features from API.
 class lastfm_api:
-    def __self__(self):
+    def __init__(self):
         conf = open("conf.json")
         conf_data = json.load(conf)
         self.api_key = conf_data["API_KEY"]
@@ -34,7 +34,7 @@ class lastfm_api:
             for track in data['recenttracks']['track']:
                 track_name = track['name']
                 timestamp = track['date']['uts']
-                recent_tracks[track_name] = timestamp
+                recent_tracks.append({'track_name' : track_name, 'listened_at' : timestamp})
             return recent_tracks
         else:
             return None
@@ -50,7 +50,7 @@ class lastfm_api:
                 track_id = track['id']
                 track_name = track['name']
                 count = int(track['playcount'])
-                top_tracks[track_name] = count
+                top_tracks.append({'track_name': track_name, 'track_id': track_id, 'track_listening_count': count})
             return top_tracks
         else:
             return None
@@ -65,7 +65,7 @@ class lastfm_api:
             for artist in data['topartists']['artist']:
                 artist_name = artist['name']
                 count = int(artist['playcount'])
-                top_artists[artist_name] = count
+                top_artists.append({'artist_name' : artist_name, 'artist_listening_count' : count})
             return top_artists
         else:
             return None
@@ -80,7 +80,7 @@ class lastfm_api:
             for track in data['toptracks']['track']:
                 track_name = track['name']
                 count = int(track['playcount'])
-                top_tracks[track_name] = count
+                top_tracks.append({'track_name': track_name, 'track_listening_count': count})
             return top_tracks
         else:
             return None
@@ -176,8 +176,8 @@ class database_api:
 
         track_list = []
         for track in top_tracks:
-            if track["name"] not in already_ins:
-                user_list.append((user["name"], user["url"]))
+            if track["track_id"] not in already_ins:
+                track_list.append((user_id, track["track_id"], track["track_listening_count"]))
         
         newly_added_length = len(user_list)
 
