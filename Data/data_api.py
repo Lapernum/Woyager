@@ -6,23 +6,22 @@ from mysql.connector import errorcode
 
 # Fetches user features from API.
 class lastfm_api:
-    def __init__(self):
-        conf = open("conf.json")
+    def __init__(self, path):
+        conf = open(path)
         conf_data = json.load(conf)
         self.api_key = conf_data["API_KEY"]
         self.base_url = 'http://ws.audioscrobbler.com/2.0/'
 
     # Return a list of info json of friends
     def get_user_friends(self, username):
-        print(self.api_key)
         url = f'https://ws.audioscrobbler.com/2.0/?method=user.getfriends&user={username}&api_key={self.api_key}&format=json'
         response = requests.get(url)
-        try:
-            if response.status_code == 200:
-                data = response.json()
-                friends = data["friends"]["user"]
-                return friends
-        except:
+
+        if response.status_code == 200:
+            data = response.json()
+            friends = data["friends"]["user"]
+            return friends
+        else:
             return None
 
     def get_recent_tracks(self, username):
@@ -34,8 +33,10 @@ class lastfm_api:
             recent_tracks = {}
             for track in data['recenttracks']['track']:
                 track_name = track['name']
+                track_url = track['url']
                 timestamp = track['date']['uts']
-                recent_tracks.append({'track_name' : track_name, 'listened_at' : timestamp})
+                artist_id = track['artist']['mbid']
+                recent_tracks.append({'track_name' : track_name, 'track_url': track_url, 'listened_at' : timestamp, 'artist_id': artist_id})
             return recent_tracks
         else:
             return None
@@ -48,10 +49,12 @@ class lastfm_api:
             data = response.json()
             top_tracks = {}
             for track in data['toptracks']['track']:
-                track_id = track['id']
+                track_id = track['mbid']
                 track_name = track['name']
+                track_url = track['url']
                 count = int(track['playcount'])
-                top_tracks.append({'track_name': track_name, 'track_id': track_id, 'track_listening_count': count})
+                artist_id = track['artist']['mbid']
+                top_tracks.append({'track_name': track_name, 'track_id': track_id, 'track_url': track_url, 'track_listening_count': count, 'artist_id': artist_id})
             return top_tracks
         else:
             return None
@@ -64,9 +67,10 @@ class lastfm_api:
             data = response.json()
             top_artists = {}
             for artist in data['topartists']['artist']:
+                artist_id = artist['mbid']
                 artist_name = artist['name']
                 count = int(artist['playcount'])
-                top_artists.append({'artist_name' : artist_name, 'artist_listening_count' : count})
+                top_artists.append({'artist_id': artist_id, 'artist_name' : artist_name, 'artist_listening_count' : count})
             return top_artists
         else:
             return None
@@ -114,8 +118,8 @@ class database_api:
             - GetAllTopTracks, Dict: {key: track_name, value: track_id}
             - GetAllTopArtists, Dict: {key: artist_name, value: artist_id}
     """
-    def __init__(self):
-        conf = open("conf.json")
+    def __init__(self, path):
+        conf = open(path)
         conf_data = json.load(conf)
         self.sql_username = conf_data["SQL_USERNAME"]
         self.sql_password = conf_data["SQL_PASSWORD"]
@@ -123,52 +127,35 @@ class database_api:
         self.sql_database = conf_data["SQL_DATABASE"]
         self.ssl_ca = conf_data["SQL_SSL_CA"]
 
-        self.cnx = mysql.connector.connect(
-            host=self.sql_host,
-            user=self.sql_username,
-            password=self.sql_password,
-            database=self.sql_database,
-            ssl_ca=self.ssl_ca
-        )
+        try:
+            self.cnx = mysql.connector.connect(
+                host=self.sql_host,
+                user=self.sql_username,
+                password=self.sql_password,
+                database=self.sql_database,
+                ssl_ca=self.ssl_ca
+            )
+        except mysql.connector.Error as err:
+            if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+                print("Something is wrong with the user name or password")
+            elif err.errno == errorcode.ER_BAD_DB_ERROR:
+                print("Database does not exist")
+            else:
+                print(err)
+            return
 
         self.cnx_cursor = self.cnx.cursor()
 
     def save_users(self, users):
-        user_list = [(user["name"], user["url"]) for user in users]
-        
-        # Prepare the insert statement
-        sql_save = "INSERT IGNORE INTO Users (user_name, user_url) VALUES (%s, %s)"
-        
-        try:
-            # Execute the insert statement in batches
-            self.cnx_cursor.executemany(sql_save, user_list)
-            # Consider committing outside this function or after a batch of inserts
-            self.cnx.commit()
-        except mysql.connector.Error as err:
-            # Handle specific error if needed
-            print(f"Database error: {err}")
-            # You might want to implement retry logic here
-        finally:
-            # It's better to handle connection closure outside of this function
-            # self.cnx.close()
-            pass
-
-        return len(user_list)  # Return the number of attempted inserts
-    
-    def save_top_tracks(self, username, top_tracks):
-        sql_getuserid = "SELECT user_id FROM Users WHERE user_name = %s"
-        self.cnx_cursor.execute(sql_getuserid, username)
-        user_id = self.cnx_cursor.fetchall()[0]
-
-        sql_fetch = "SELECT track_id FROM Top_track WHERE user_id = %s"
-        self.cnx_cursor.execute(sql_fetch, user_id)
+        sql_fetch = "SELECT user_name FROM Users"
+        self.cnx_cursor.execute(sql_fetch)
         already_in = self.cnx_cursor.fetchall()
         already_ins = [a[0] for a in already_in]
 
-        track_list = []
-        for track in top_tracks:
-            if track["track_id"] not in already_ins:
-                track_list.append((user_id, track["track_id"], track["track_listening_count"]))
+        user_list = []
+        for user in users:
+            if user["name"] not in already_ins:
+                user_list.append((user["name"], user["url"]))
         
         newly_added_length = len(user_list)
 
@@ -176,9 +163,38 @@ class database_api:
 
         self.cnx_cursor.executemany(sql_save, user_list)
         self.cnx.commit()
-        self.cnx.close()
-
         return newly_added_length
+
+    def save_artists(self, artists):
+        artist_list = [(artist["artist_id"], artist["artist_name"], artist["artist_listening_count"]) for artist in artists]
+
+        sql_save = "INSERT IGNORE INTO Artists (artist_id, artist_name, artist_listening_count) VALUES (%s, %s, %d)"
+
+        self.cnx_cursor.executemany(sql_save, artist_list)
+        self.cnx.commit()
+        return
+    
+    def save_tracks(self, tracks):
+        track_list = [(track["track_id"], track["track_name"], track["track_url"], track["artist_id"]) for track in tracks]
+
+        sql_save = "INSERT IGNORE INTO Tracks (track_id, track_name, track_url, artist_id) VALUES (%s, %s, %s, %s)"
+
+        self.cnx_cursor.executemany(sql_save, track_list)
+        self.cnx.commit()
+        return
+    
+    def save_top_tracks(self, username, top_tracks):
+        sql_getuserid = "SELECT user_id FROM Users WHERE user_name = %s"
+        self.cnx_cursor.execute(sql_getuserid, username)
+        user_id = self.cnx_cursor.fetchall()[0]
+
+        track_list = [(user_id, track["track_id"], track["track_listening_count"]) for track in top_tracks]
+
+        sql_save = "INSERT IGNORE INTO Top_track (user_id, track_id, track_listening_count) VALUES (%d, %s, %d)"
+
+        self.cnx_cursor.executemany(sql_save, track_list)
+        self.cnx.commit()
+        return
 
     def get_recent_tracks(self, user_id):
         cursor = self.conn.cursor(dictionary=True)
