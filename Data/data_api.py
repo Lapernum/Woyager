@@ -14,14 +14,15 @@ class lastfm_api:
 
     # Return a list of info json of friends
     def get_user_friends(self, username):
+        print(self.api_key)
         url = f'https://ws.audioscrobbler.com/2.0/?method=user.getfriends&user={username}&api_key={self.api_key}&format=json'
         response = requests.get(url)
-
-        if response.status_code == 200:
-            data = response.json()
-            friends = data["friends"]["user"]
-            return friends
-        else:
+        try:
+            if response.status_code == 200:
+                data = response.json()
+                friends = data["friends"]["user"]
+                return friends
+        except:
             return None
 
     def get_recent_tracks(self, username):
@@ -119,27 +120,9 @@ class database_api:
         )
 
     def save_users(self, users):
-        config = {
-            'host': self.sql_host,
-            'user': self.sql_username,
-            'password': self.sql_password,
-            'database': self.sql_database,
-            'client_flags': [mysql.connector.ClientFlag.SSL],
-            'ssl_ca': self.ssl_ca
-        }
+  
 
-        try:
-            cnx = mysql.connector.connect(**config)
-        except mysql.connector.Error as err:
-            if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-                print("Something is wrong with the user name or password")
-            elif err.errno == errorcode.ER_BAD_DB_ERROR:
-                print("Database does not exist")
-            else:
-                print(err)
-            return
-
-        cnx_cursor = cnx.cursor()
+        cnx_cursor = self.conn.cursor()
 
         sql_fetch = "SELECT user_name FROM Users"
         cnx_cursor.execute(sql_fetch)
@@ -158,6 +141,8 @@ class database_api:
         cnx.close()
 
         return
+    
+
 
     def get_recent_tracks(self, user_id):
         cursor = self.conn.cursor(dictionary=True)
