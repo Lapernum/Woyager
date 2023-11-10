@@ -1,27 +1,35 @@
 import numpy as np
 import sys
-sys.path.insert(0, "Data")
-import data_api
+import os
+# sys.path.insert(0, "Data")
+sys.path.append(os.path.join("D:/GATECH/TreeMusicRecommendation"))
+from Data.data_api import *
+
 
 class SelfListening:
-    def __init__(self, mode='tag'):
+    def __init__(self, mode='tag', user='rj'):
+        # print(os.path.join("Data/conf.json"))
+        self.dbapi = database_api(os.path.join("Data/conf.json"))
+        self.lastapi = lastfm_api(os.path.join("Data/conf.json"))
+
         # The top tracks of the user, list(track_id)
-        self.top_track = list()
+        self.top_track = list(self.lastapi.get_top_tracks(user).keys())
         # The recent tracks listened by the user, list(track_id)
-        self.recent = list()
+        self.recent = list(self.lastapi.get_recent(user).keys())
         # The top artists of the user, list(artist_id)
-        self.top_artist = list()
+        # currently, dict(artist_name, count)
+        self.top_artist = self.lastapi.get_top_artist(user)
         # The added tracks that is selected by user in the process, list(track_id)
         self.added_track = list()
         # Mode for the recommend step, either 'tag' or 'artist'
         self.mode = mode
         # The selected tracks from select_songs()
         self.selected = list()
+
         # The top tags from top_track and recent_track, list(tag_id)
         self.top_tag = list()
-
-        self.dbapi = data_api.database_api()
-        self.lastapi = data_api.lastfm_api()
+        
+        
         
     def add_track(self, added_song):
         '''
@@ -157,6 +165,7 @@ def main():
     score3 = user.tag_sim_score(tag4, tag5)
     print(score2)
     print(score3)
+    user.lastapi.get_top_artist('rj')
 
 if __name__ == "__main__":
     main()
