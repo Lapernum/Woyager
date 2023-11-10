@@ -123,7 +123,7 @@ class database_api:
         self.sql_database = conf_data["SQL_DATABASE"]
         self.ssl_ca = conf_data["SQL_SSL_CA"]
 
-        self.conn = mysql.connector.connect(
+        self.cnx = mysql.connector.connect(
             host=self.sql_host,
             user=self.sql_username,
             password=self.sql_password,
@@ -131,28 +131,29 @@ class database_api:
             ssl_ca=self.ssl_ca
         )
 
-
         self.cnx_cursor = self.cnx.cursor()
 
     def save_users(self, users):
-        sql_fetch = "SELECT user_name FROM Users"
-        self.cnx_cursor.execute(sql_fetch)
-        already_in = self.cnx_cursor.fetchall()
-        already_ins = [a[0] for a in already_in]
-
-        user_list = []
-        for user in users:
-            if user["name"] not in already_ins:
-                user_list.append((user["name"], user["url"]))
+        user_list = [(user["name"], user["url"]) for user in users]
         
-        newly_added_length = len(user_list)
-
+        # Prepare the insert statement
         sql_save = "INSERT IGNORE INTO Users (user_name, user_url) VALUES (%s, %s)"
+        
+        try:
+            # Execute the insert statement in batches
+            self.cnx_cursor.executemany(sql_save, user_list)
+            # Consider committing outside this function or after a batch of inserts
+            self.cnx.commit()
+        except mysql.connector.Error as err:
+            # Handle specific error if needed
+            print(f"Database error: {err}")
+            # You might want to implement retry logic here
+        finally:
+            # It's better to handle connection closure outside of this function
+            # self.cnx.close()
+            pass
 
-        self.cnx_cursor.executemany(sql_save, user_list)
-        self.cnx.commit()
-        self.cnx.close()
-
+        return len(user_list)  # Return the number of attempted inserts
     
     def save_top_tracks(self, username, top_tracks):
         sql_getuserid = "SELECT user_id FROM Users WHERE user_name = %s"
@@ -178,7 +179,6 @@ class database_api:
         self.cnx.close()
 
         return newly_added_length
->>>>>>> main
 
     def get_recent_tracks(self, user_id):
         cursor = self.conn.cursor(dictionary=True)
