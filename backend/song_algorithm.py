@@ -4,7 +4,7 @@ import os
 # sys.path.insert(0, "Data")
 sys.path.append(os.path.join("D:/GATECH/TreeMusicRecommendation"))
 from Data.data_api import *
-
+import math
 
 class SelfListening:
     def __init__(self, mode='tag', user='rj'):
@@ -28,10 +28,21 @@ class SelfListening:
 
         # The top tags from top_track and recent_track, list(tag_id)
         self.top_tag = {}
+        idx = 0
         for artist_name, count in self.top_artist.items():
+            # Assume {tag: count} dict structure
+            if idx > 20:
+                break
             artist_tags = self.dbapi.GetArtistTopTags(artist_name)
-
-        
+            for tag, cnt in artist_tags.items():
+                if tag in self.top_tag:
+                    self.top_tag[tag] += np.log2(count) * cnt
+            idx += 1
+        self.top_tag = sorted(self.top_tag.items(), key=lambda x: x[1], reverse=True)
+        self.top_tag = self.top_tag[:10]
+        max_tag_cnt = max(self.top_tag.values())
+        for tag in self.top_tag:
+            self.top_tag[tag] = math.floor((self.top_tag[tag] / max_tag_cnt) * 100)
         
         
     def add_track(self, added_song):
