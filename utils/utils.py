@@ -51,8 +51,7 @@ def normalizeTag(top_tags=None, artist=None, track=None, n=3):
     for tag, (count, idx) in normalized.items():
         norm_original.append((top_tags[idx][0].title(), top_tags[idx][1]))
     
-
-    return norm_original
+    return norm_original[:3]
 
 def main():
     print("Hello World!")

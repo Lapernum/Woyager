@@ -17,6 +17,11 @@ class SelfListening:
         self.mode = mode
         # The selected tracks from select_songs()
         self.selected = list()
+        # The top tags from top_track and recent_track, list(tag_id)
+        self.top_tag = list()
+
+        self.dbapi = data_api.database_api()
+        self.lastapi = data_api.lastfm_api()
         
     def add_track(self, added_song):
         '''
@@ -82,9 +87,29 @@ class SelfListening:
         Output:
             - score: a float number representing similarity between two songs
         '''
-        raise NotImplementedError
-    
+        tags_song1 = self.dbapi.GetTrackTopTags(song1)
+        tags_song2 = self.dbapi.GetTrackTopTags(song2)
+        artist1 = self.dbapi.GetArtistFromSong(song1)
+        artist2 = self.dbapi.GetArtistFromSong(song2)
+        tags_artist1 = self.dbapi.GetArtistTopTags(artist1)
+        tags_artist2 = self.dbapi.GetArtistTopTags(artist2)
 
+        score = self.tag_sim_score(tags_song1, tags_song2) * 0.7 + self.tag_sim_score(tags_artist1, tags_artist2) * 0.3
+        return score
+    
+    def select_ten(self):
+        '''
+        With the selected tracks, select the top ten with the highest similarity score.
+        The top_tracks and recent_tracks will have lower weight compared to added_tracks.
+
+        Input:
+            - None, just use self.selected()
+        
+        Output:
+            - ten_songs: A list of track_id from database, with length at most 10.
+            - score: A list of similarity scores corresponding to the songs.
+        '''
+        raise NotImplementedError
 
     def select_songs(self, arg=None):
         '''
@@ -105,7 +130,7 @@ class SelfListening:
         Output:
             - songs: A list of track_id from database
         '''
-        raise NotImplementedError
+        return self.dbapi.GetTracksWithTags(tag)
     
     def select_artist_songs(self, artist=None):
         '''
@@ -117,7 +142,7 @@ class SelfListening:
         Output:
             - songs: A list of track_id from last.fm API
         '''
-        raise NotImplementedError
+        return self.lastapi.get_artist_top_tracks(artist)
 
 def main():
     user = SelfListening()
