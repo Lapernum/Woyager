@@ -165,6 +165,7 @@ def main():
     score3 = user.tag_sim_score(tag4, tag5)
     print(score2)
     print(score3)
+    # Testing purpose
     user.lastapi.get_top_artist('rj')
 
 if __name__ == "__main__":
