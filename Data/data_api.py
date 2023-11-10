@@ -175,11 +175,11 @@ class database_api:
         return
     
     def save_tracks(self, tracks):
-        artist_list = [(artist["artist_id"], artist["artist_name"], artist["artist_listening_count"]) for artist in artists]
+        track_list = [(track["track_id"], track["track_name"], track["track_url"], track["artist_id"]) for track in tracks]
 
-        sql_save = "INSERT IGNORE INTO Artists (artist_id, artist_name, artist_listening_count) VALUES (%s, %s, %d)"
+        sql_save = "INSERT IGNORE INTO Tracks (track_id, track_name, track_url, artist_id) VALUES (%s, %s, %s, %s)"
 
-        self.cnx_cursor.executemany(sql_save, artist_list)
+        self.cnx_cursor.executemany(sql_save, track_list)
         self.cnx.commit()
         return
     
