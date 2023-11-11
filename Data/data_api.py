@@ -89,34 +89,6 @@ class lastfm_api:
             return top_tracks
         else:
             return None
-        
-    def get_track_tags(self, track_name, artist_name):
-        url = f'{self.base_url}?method=track.getTags&api_key={self.api_key}&artist={artist_name}&track={track_name}&format=json'
-        response = requests.get(url)
-
-        if response.status_code == 200:
-            data = response.json()
-            track_tags = []
-            for tag in data['tags']['tag']:
-                tag_name = tag['name']
-                track_tags.append({'tag_name' : tag_name})
-            return track_tags
-        else:
-            return None
-
-    def get_artist_tags(self, artist_name):
-        url = f'{self.base_url}?method=artist.getTags&artist={artist_name}&api_key={self.api_key}&format=json'
-        response = requests.get(url)
-
-        if response.status_code == 200:
-            data = response.json()
-            artist_tag = []
-            for tag in data['tags']['tag']:
-                tag_name = tag['name']
-                artist_tag.append({'tag_name' : tag_name})
-            return artist_tag
-        else:
-            return None
 
     def get_track_id(self, track_name, artist_name):
         url = f'{self.base_url}?method=track.getInfo&artist={artist_name}&track={track_name}&api_key={self.api_key}&format=json'
@@ -129,6 +101,37 @@ class lastfm_api:
         else:
             return None
         
+    def get_track_tags(self, track_name, artist_name):
+        url = f'{self.base_url}?method=track.gettoptags&artist={artist_name}&track={track_name}&api_key={self.api_key}&format=json'
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            data = response.json()
+            track_tags = []
+            for tag in data['toptags']['tag']:
+                tag_name = tag['name']
+                tag_count = int(tag[cuont])
+                track_tags.append({'tag_name': tag_name, 'tag_count': tag_count})
+            return track_tags
+        else:
+            return None
+
+    def get_artist_tags(self, artist_name):
+        url = f'{self.base_url}?method=artist.gettoptags&artist={artist_name}&api_key={self.api_key}&format=json'
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            data = response.json()
+            artist_tag = []
+            for tag in data['toptags']['tag']:
+                tag_name = tag['name']
+                tag_count = int(tag[cuont])
+                track_tags.append({'tag_name': tag_name, 'tag_count': tag_count})
+            return artist_tag
+        else:
+            return None
+
+
 # Fetches user features from the database.
 class database_api:
     """
