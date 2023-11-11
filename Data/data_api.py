@@ -113,8 +113,9 @@ class lastfm_api:
             track_tags = []
             for tag in data['toptags']['tag']:
                 tag_name = tag['name']
-                tag_count = int(tag[cuont])
-                track_tags.append({'tag_name': tag_name, 'tag_count': tag_count})
+                tag_count = int(tag['count'])
+                tag_url = tag['url']
+                track_tags.append({'tag_name': tag_name, 'tag_count': tag_count, 'tag_url': tag_url})
             return track_tags
         else:
             return None
@@ -125,12 +126,13 @@ class lastfm_api:
 
         if response.status_code == 200:
             data = response.json()
-            artist_tag = []
+            artist_tags = []
             for tag in data['toptags']['tag']:
                 tag_name = tag['name']
-                tag_count = int(tag[cuont])
-                track_tags.append({'tag_name': tag_name, 'tag_count': tag_count})
-            return artist_tag
+                tag_count = int(tag['count'])
+                tag_url = tag['tag_url']
+                artist_tags.append({'tag_name': tag_name, 'tag_count': tag_count, 'tag_url': tag_url})
+            return artist_tags
         else:
             return None
         
@@ -252,6 +254,43 @@ class database_api:
         sql_save = "INSERT IGNORE INTO Listening_history (user_id, track_id, listened_at) VALUES (%d, %s, %s)"
 
         self.cnx_cursor.executemany(sql_save, track_list)
+        self.cnx.commit()
+        return
+    
+    def save_tags(self, tags):
+        sql_fetch = "SELECT tag_name FROM Tags"
+        self.cnx_cursor.execute(sql_fetch)
+        already_in = self.cnx_cursor.fetchall()
+        already_ins = [a[0] for a in already_in]
+
+        tag_list = []
+        for tag in tags:
+            if tag["tag_name"] not in already_ins:
+                tag_list.append((tag["tag_name"], tag["tag_url"]))
+        
+        newly_added_length = len(tag_list)
+
+        sql_save = "INSERT IGNORE INTO Tags (tag_name, tag_url) VALUES (%s, %s)"
+
+        self.cnx_cursor.executemany(sql_save, tag_list)
+        self.cnx.commit()
+        return newly_added_length
+    
+    def save_track_tag(self, track_id, tags):
+        tag_list = [(tag["tag_id"], track_id, tag["tag_count"]) for tag in tags]
+
+        sql_save = "INSERT IGNORE INTO Track_tag (tag_id, track_id, tag_count) VALUES (%d, %s, %d)"
+
+        self.cnx_cursor.executemany(sql_save, tag_list)
+        self.cnx.commit()
+        return
+    
+    def save_artist_tag(self, artist_id, tags):
+        tag_list = [(tag["tag_id"], artist_id, tag["tag_count"]) for tag in tags]
+
+        sql_save = "INSERT IGNORE INTO Artist_tag (tag_id, artist_id, tag_count) VALUES (%d, %s, %d)"
+
+        self.cnx_cursor.executemany(sql_save, tag_list)
         self.cnx.commit()
         return
 
