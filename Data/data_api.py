@@ -1,6 +1,8 @@
 """API Methods for fetching data from database and Last.fm API"""
 import requests
 import json
+import time
+import datetime
 import mysql.connector
 from mysql.connector import errorcode
 
@@ -35,6 +37,7 @@ class lastfm_api:
                 track_name = track['name']
                 track_url = track['url']
                 timestamp = track['date']['uts']
+                timestamp = datetime.datetime.fromtimestamp(timestamp).strftime('%d %b %Y, %H:%M')
                 artist_id = track['artist']['mbid']
                 recent_tracks.append({'track_name' : track_name, 'track_url': track_url, 'listened_at' : timestamp, 'artist_id': artist_id})
             return recent_tracks
@@ -191,6 +194,32 @@ class database_api:
         track_list = [(user_id, track["track_id"], track["track_listening_count"]) for track in top_tracks]
 
         sql_save = "INSERT IGNORE INTO Top_track (user_id, track_id, track_listening_count) VALUES (%d, %s, %d)"
+
+        self.cnx_cursor.executemany(sql_save, track_list)
+        self.cnx.commit()
+        return
+    
+    def save_top_artists(self, username, top_artists):
+        sql_getuserid = "SELECT user_id FROM Users WHERE user_name = %s"
+        self.cnx_cursor.execute(sql_getuserid, username)
+        user_id = self.cnx_cursor.fetchall()[0]
+
+        artist_list = [(user_id, artist["artist_id"], artist["artist_listening_count"]) for artist in top_artists]
+
+        sql_save = "INSERT IGNORE INTO Top_artist (user_id, artist_id, artist_listening_count) VALUES (%d, %s, %d)"
+
+        self.cnx_cursor.executemany(sql_save, artist_list)
+        self.cnx.commit()
+        return
+    
+    def save_listening_history(self, username, recent_tracks):
+        sql_getuserid = "SELECT user_id FROM Users WHERE user_name = %s"
+        self.cnx_cursor.execute(sql_getuserid, username)
+        user_id = self.cnx_cursor.fetchall()[0]
+
+        track_list = [(user_id, track["track_id"], track["listened_at"]) for track in recent_tracks]
+
+        sql_save = "INSERT IGNORE INTO Listening_history (user_id, track_id, listened_at) VALUES (%d, %s, %s)"
 
         self.cnx_cursor.executemany(sql_save, track_list)
         self.cnx.commit()

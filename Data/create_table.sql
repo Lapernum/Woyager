@@ -44,10 +44,10 @@ create table Top_track (
 
 create table Top_artist (
 	user_id BIGINT NOT NULL,
-    track_id VARCHAR(100) NOT NULL,
+    artist_id VARCHAR(100) NOT NULL,
     artist_listening_count INTEGER NOT NULL DEFAULT 0,
     foreign key (user_id) references Users(user_id),
-    foreign key (track_id) references Tracks(track_id)QQ
+    foreign key (artist_id) references Artists(artist_id)
 );
 
 create table Listening_history (
