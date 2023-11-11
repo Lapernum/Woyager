@@ -35,6 +35,8 @@ def calculate_recent_tracks_score(recent_tracks):
         tracks_score[track] = (tracks_score[track] - track_score_min) / (track_score_max - track_score_min)*0.95 + 0.05
     return tracks_score
 
+    
+
 
 def calculate_top_tracks_score(top_tracks):
     """
