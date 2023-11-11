@@ -12,28 +12,40 @@ class SelfListening:
         self.dbapi = database_api(os.path.join("Data/conf.json"))
         self.lastapi = lastfm_api(os.path.join("Data/conf.json"))
 
-        # The top tracks of the user, list(track_id)
-        self.top_track = list(self.lastapi.get_top_tracks(user).keys())
-        # The recent tracks listened by the user, list(track_id)
-        self.recent = list(self.lastapi.get_recent_tracks(user).keys())
+        # The top tracks of the user, 
+        # list(dict(track_name, track_id, track_url, track_listening_count, artist_id))
+        self.top_track = self.lastapi.get_top_tracks(user)
+
+        # The recent tracks listened by the user, 
+        # list(dict(track_name, track_url, listened_at, artist_id))
+        self.recent = self.lastapi.get_recent_tracks(user)
+
         # The top artists of the user, list(artist_id)
-        # currently, dict(artist_name, count)
+        # currently, list(dict(artist_id, artist_name, count))
         self.top_artist = self.lastapi.get_top_artist(user)
+
         # The added tracks that is selected by user in the process, list(track_id)
         self.added_track = list()
+
         # Mode for the recommend step, either 'tag' or 'artist'
         self.mode = mode
+
         # The selected tracks from select_songs()
         self.selected = list()
+        # The similarity between a track and the group of tracks listened previously by user.
+        # As a dict {track: score}
+        self.similarity = {}
 
         # The top tags from top_track and recent_track, list(tag_id)
         self.top_tag = {}
         idx = 0
-        for artist_name, count in self.top_artist.items():
+        for artist in self.top_artist:
             # Assume {tag: count} dict structure
+            artist_id = artist['artist_id']
+            count = artist['playcount']
             if idx > 20:
                 break
-            artist_tags = self.dbapi.GetArtistTopTags(artist_name)
+            artist_tags = self.dbapi.GetArtistTopTags(artist_id)
             for tag, cnt in artist_tags.items():
                 if tag in self.top_tag:
                     self.top_tag[tag] += np.log2(count) * cnt
@@ -165,6 +177,12 @@ class SelfListening:
             - songs: A list of track_id from last.fm API
         '''
         return self.lastapi.get_artist_top_tracks(artist)
+    
+    def close_server(self):
+        '''
+        Close connection to the database
+        '''
+        self.dbapi.close_connection()
 
 def main():
     user = SelfListening()
