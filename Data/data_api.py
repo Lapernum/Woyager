@@ -113,7 +113,7 @@ class lastfm_api:
             track_tags = []
             for tag in data['toptags']['tag']:
                 tag_name = tag['name']
-                tag_count = int(tag[cuont])
+                tag_count = int(tag['count'])
                 track_tags.append({'tag_name': tag_name, 'tag_count': tag_count})
             return track_tags
         else:
@@ -128,7 +128,7 @@ class lastfm_api:
             artist_tag = []
             for tag in data['toptags']['tag']:
                 tag_name = tag['name']
-                tag_count = int(tag[cuont])
+                tag_count = int(tag['count'])
                 track_tags.append({'tag_name': tag_name, 'tag_count': tag_count})
             return artist_tag
         else:
