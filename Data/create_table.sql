@@ -26,7 +26,7 @@ create table Artists (
 );
 
 create table Tracks (
-	track_id VARCHAR(100) NOT NULL,
+	track_id VARCHAR(100) NOT NULL AUTO_INCREMENT,
     track_name VARCHAR(50) NOT NULL,
     track_url VARCHAR(100) NOT NULL,
     artist_id VARCHAR(100) NOT NULL,
