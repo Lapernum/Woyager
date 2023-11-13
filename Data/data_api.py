@@ -6,6 +6,8 @@ import datetime
 import mysql.connector
 from mysql.connector import errorcode
 
+from .utils import normalizeTag
+
 # Fetches user features from API.
 class lastfm_api:
     def __init__(self, path):
@@ -168,7 +170,7 @@ class lastfm_api:
 
         Returns:
             List: a list of the track's top tags in this format
-                [{"tag_name", "tag_count", "tag_url"}, ..., ...]
+                [{"tag_name", "tag_count"}, ..., ...]
         """
         url = f'{self.base_url}?method=track.gettoptags&artist={artist_name}&track={track_name}&api_key={self.api_key}&format=json'
         response = requests.get(url)
@@ -179,9 +181,12 @@ class lastfm_api:
             for tag in data['toptags']['tag']:
                 tag_name = tag['name'].lower()
                 tag_count = int(tag['count'])
-                tag_url = tag['url']
-                track_tags.append({'tag_name': tag_name, 'tag_count': tag_count, 'tag_url': tag_url})
-            return track_tags
+                track_tags.append((tag_name, tag_count))
+            normalized_track_tags = normalizeTag(track_tags, artist_name, track_name, n = 5)
+            result_tags = []
+            for normalized_tag in normalized_track_tags:
+                result_tags.append({'tag_name': normalized_tag[0], 'tag_count': normalized_tag[1]})
+            return result_tags
         else:
             return None
 
@@ -193,7 +198,7 @@ class lastfm_api:
 
         Returns:
             List: a list of the artist's top tags in this format
-                [{"tag_name", "tag_count", "tag_url"}, ..., ...]
+                [{"tag_name", "tag_count"}, ..., ...]
         """
         url = f'{self.base_url}?method=artist.gettoptags&artist={artist_name}&api_key={self.api_key}&format=json'
         response = requests.get(url)
@@ -204,9 +209,12 @@ class lastfm_api:
             for tag in data['toptags']['tag']:
                 tag_name = tag['name'].lower()
                 tag_count = int(tag['count'])
-                tag_url = tag['tag_url']
-                artist_tags.append({'tag_name': tag_name, 'tag_count': tag_count, 'tag_url': tag_url})
-            return artist_tags
+                artist_tags.append((tag_name, tag_count))
+            normalized_artist_tags = normalizeTag(artist_tags, artist_name, n = 5)
+            result_tags = []
+            for normalized_tag in normalized_artist_tags:
+                result_tags.append({'tag_name': normalized_tag[0], 'tag_count': normalized_tag[1]})
+            return result_tags
         else:
             return None
         
