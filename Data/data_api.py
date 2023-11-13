@@ -72,7 +72,7 @@ class lastfm_api:
 
         Returns:
             List: a list of the user's top tracks in this format
-                [{"track_name", "track_id", "track_url", "listened_at", "artist_id"}, ..., ...]
+                [{"track_name", "track_url", "listened_at", "artist_id"}, ..., ...]
                 where listened_at has been transformed from a timestamp into a python string
         """
         url = f'{self.base_url}?method=user.getTopTracks&user={username}&api_key={self.api_key}&format=json'
@@ -82,12 +82,11 @@ class lastfm_api:
             data = response.json()
             top_tracks = []
             for track in data['toptracks']['track']:
-                track_id = track['mbid']
                 track_name = track['name']
                 track_url = track['url']
                 count = int(track['playcount'])
                 artist_id = track['artist']['mbid']
-                top_tracks.append({'track_name': track_name, 'track_id': track_id, 'track_url': track_url, 'track_listening_count': count, 'artist_id': artist_id})
+                top_tracks.append({'track_name': track_name, 'track_url': track_url, 'track_listening_count': count, 'artist_id': artist_id})
             return top_tracks
         else:
             return None
@@ -138,26 +137,6 @@ class lastfm_api:
                 count = int(track['playcount'])
                 top_tracks.append({'track_name': track_name, 'track_listening_count': count})
             return top_tracks
-        else:
-            return None
-
-    def get_track_id(self, track_name, artist_name):
-        """Get the track id based on the track name and the artist name.
-
-        Args:
-            track_name (String): the name of the track
-            artist_name (String): the name of the artist of the track
-
-        Returns:
-            String: the mbid of the track
-        """
-        url = f'{self.base_url}?method=track.getInfo&artist={artist_name}&track={track_name}&api_key={self.api_key}&format=json'
-        response = requests.get(url)
-
-        if response.status_code == 200:
-            data = response.json()
-            track_id = data["track"]["mbid"]
-            return track_id
         else:
             return None
         
@@ -264,7 +243,7 @@ class database_api:
         self.cnx_cursor = self.cnx.cursor()
 
     def save_users(self, users):
-        """Save a list of users into database.
+        """Save a list of users into database without duplication.
 
         Args:
             users (List): a list of users in this format
@@ -307,19 +286,32 @@ class database_api:
         return
     
     def save_tracks(self, tracks):
-        """Save a list of tracks into the database.
+        """Save a list of tracks into the database without duplication.
 
         Args:
             tracks (List): a list of artists in this format
-                [{"track_id", "track_name", "track_url", "artist_id"}, ..., ...]
+                [{"track_name", "track_url", "artist_id"}, ..., ...]
+        
+        Returns:
+            int: the number of new tracks added to the database without duplication
         """
-        track_list = [(track["track_id"], track["track_name"], track["track_url"], track["artist_id"]) for track in tracks]
+        sql_fetch = "SELECT track_name, artist_id FROM Tracks"
+        self.cnx_cursor.execute(sql_fetch)
+        already_in = self.cnx_cursor.fetchall()
+        already_ins = [a[0] for a in already_in]
 
-        sql_save = "INSERT IGNORE INTO Tracks (track_id, track_name, track_url, artist_id) VALUES (%s, %s, %s, %s)"
+        track_list = []
+        for track in tracks:
+            if (track["track_name"], track["artist_id"]) not in already_ins:
+                track_list.append((track["track_name"], track["track_url"], track["artist_id"]))
+
+        newly_added_length = len(track_list)
+
+        sql_save = "INSERT IGNORE INTO Tracks (track_name, track_url, artist_id) VALUES (%s, %s, %s)"
 
         self.cnx_cursor.executemany(sql_save, track_list)
         self.cnx.commit()
-        return
+        return newly_added_length
     
     def save_top_tracks(self, username, top_tracks):
         """Save a list of top tracks of a given user to the database.
@@ -449,19 +441,19 @@ class database_api:
 
         Returns:
             recent_tracks: a Dict of tracks in this format
-                {key: track_id, value: list[timestamp]}
+                [{key: track_id, value: list[timestamp]}, ..., ...]
         """
         cursor = self.conn.cursor(dictionary=True)
         query = """
-        SELECT tracks.Track_name, listening_history.listened_at
+        SELECT Tracks.track_name, Listening_history.listened_at
         FROM listening_history
-        JOIN tracks ON listening_history.track_id = tracks.track_id
-        WHERE listening_history.user_id = %s
+        JOIN Tracks ON Listening_history.track_id = Tracks.track_id
+        WHERE Listening_history.user_id = %s
         """
         cursor.execute(query, (user_id,))
         recent_tracks = {}
         for row in cursor.fetchall():
-            track_name = row['Track_name']
+            track_name = row['track_name']
             listened_at = row['listened_at']
             if track_name in recent_tracks:
                 recent_tracks[track_name].append(listened_at)
@@ -478,21 +470,22 @@ class database_api:
 
         Returns:
             top_tracks: a Dict of tracks in this format
-                 {key: track_id, value: count}
+                [{key: track_id, value: track_listening_count}, ..., ...]
+                 
         """
         cursor = self.conn.cursor(dictionary=True)
         query = """
-        SELECT Tracks.tract_name, top_track.Count
-        FROM top_track
-        JOIN tracks ON top_track.track_id = Tracks.track_id
-        WHERE top_track.user_id = %s
+        SELECT Tracks.tract_name, Top_track.track_listening_count
+        FROM Top_track
+        JOIN Tracks ON Top_track.track_id = Tracks.track_id
+        WHERE Top_track.user_id = %s
         """
         cursor.execute(query, (user_id,))
         top_tracks = {}
         for row in cursor.fetchall():
-            track_name = row['Track_name']
-            count = row['Count']
-            top_tracks[track_name] = count
+            track_name = row['tract_name']
+            track_listening_count = row['track_listening_count']
+            top_tracks[track_name] = track_listening_count
 
         return top_tracks
     
@@ -504,36 +497,40 @@ class database_api:
 
         Returns:
             top_artist: a Dict of artists in this format
-                 {key: artist_id, value: count}
+                [{key: artist_id, value: artist_listening_count}, ..., ...]
         """
         cursor = self.conn.cursor(dictionary=True)
         query = """
-        SELECT Artist.artist_name, top_artist.Count
+        SELECT Artist.artist_name, Top_artist.artist_listening_count
         FROM Artist
-        JOIN top_artist ON Artist.artist_id = top_artist.artist_id
-        WHERE top_artist.user_id = %s
+        JOIN Top_artist ON Artist.artist_id = Top_artist.artist_id
+        WHERE Top_artist.user_id = %s
         """
         cursor.execute(query, (user_id,))
         top_artist = {}
         for row in cursor.fetchall():
             artist_name = row['artist_name']
-            count = row['Count']
-            top_artist[artist_name] = count
+            artist_listening_count = row['artist_listening_count']
+            top_artist[artist_name] = artist_listening_count
 
         return top_artist
     
     def get_all_listening_history_tracks(self):
-        """ Fetches all tracks from the listening history.
+        """ Fetches all tracks from the listening history table.
 
         Args:
             None
 
         Returns:
             historyTracks_dict: a Dict of tracks in this format
-                {key: track_name, value: track_id}
+                [{key: track_name, value: track_id}, ..., ...]
         """
         cursor = self.conn.cursor(dictionary=True)
-        query = "SELECT tracks.track_name, listening_history.track_id FROM listening_history JOIN tracks ON listening_history.track_id = tracks.track_id"
+        query = """
+        SELECT Tracks.track_name, Listening_history.track_id 
+        FROM Listening_history 
+        JOIN Tracks ON Listening_history.track_id = Tracks.track_id
+        """
         cursor.execute(query)
         history_tracks = cursor.fetchall()
         historyTracks_dict = {track['track_name']: track['track_id'] for track in history_tracks}
@@ -546,10 +543,13 @@ class database_api:
 
         Returns:
             topTracks_dict: a Dict of tracks in this format
-                {key: track_name, value: track_id}
+                [{key: track_name, value: track_id}, ..., ...]
         """
         cursor = self.conn.cursor(dictionary=True)
-        query = "SELECT tracks.track_name, top_track.track_id FROM top_track JOIN tracks ON top_track.track_id = tracks.track_id"
+        query = """
+        SELECT Tracks.track_name, Top_track.track_id 
+        FROM Top_track 
+        JOIN Tracks ON Top_track.track_id = Tracks.track_id"""
         cursor.execute(query)
         top_tracks = cursor.fetchall()
         topTracks_dict = {track['track_name']: track['track_id'] for track in top_tracks}
@@ -562,13 +562,17 @@ class database_api:
 
         Returns:
             artist_dict: a Dict of artists in this format
-                {key: artist_name, value: artist_id}
+                [{key: artist_name, value: artist_id}, ..., ...]
         """
         cursor = self.conn.cursor(dictionary=True)
-        query = "SELECT Artists.artist_name, top_artist.artist_id FROM top_artist JOIN artists ON top_artist.artist_id = Artists.artist_id"
+        query = """
+        SELECT Artists.artist_name, Top_artist.artist_id 
+        FROM Top_artist 
+        JOIN Artists ON Top_artist.artist_id = Artists.artist_id
+        """
         cursor.execute(query)
         top_artist = cursor.fetchall()
-        artist_dict = {track['artist_name']: track['artist_id'] for artist in top_artist}
+        artist_dict = {artist['artist_name']: artist['artist_id'] for artist in top_artist}
         return artist_dict
     
     def get_all_users(self):
@@ -585,15 +589,74 @@ class database_api:
         users = cursor.fetchall()
         all_user_id = [user['user_id'] for user in users]
         return all_user_id
-
-    def close_connection(self):
-        """Needs modification
+    
+    def get_artist_name(self, artist_id):
+        """Get the artist name from Artists table.
 
         Args:
-            tags (List): a list of tags in this format
-                [{"tag_name", "tag_url"}, ..., ...]
+            artist_id (String): the mbid of the artist
 
         Returns:
-            int: the number of new tags added to the database without duplication
+            artist_name(String)
         """
+        cursor = self.conn.cursor(dictionary=True)
+        query = "SELECT artist_name FROM Artists WHERE artist_id = %s"
+        cursor.execute(query, (artist_id),)
+        result = cursor.fetchone()
+        if result:
+            return result[0]
+        else:
+            return None
+
+    def get_artist_top_tags(self, artist_id):
+        """Get the artist's top tags from database.
+
+        Args:
+            artist_id (String): the mbid of the artist
+
+        Returns:
+            A list of tag names
+            ["tag1", "tag2", ..., ...]
+        """
+        cursor = self.conn.cursor(dictionary=True)
+        query = "SELECT tag_id FROM Artist_Tag WHERE artist_id = %s"""
+        cursor.execute(query, (artist_id,))
+        tags = cursor.fetchall()
+        tag_ids = [tag['tag_id'] for tag in tags]
+        return tag_ids
+
+    def get_track_top_tags(self, track_id):
+        """Get the track's top tags from database.
+
+        Args:
+            track_id (String)
+
+        Returns:
+            A list of tag names
+        """
+        cursor = self.conn.cursor(dictionary=True)
+        query = "SELECT tag_id FROM Track_tag WHERE artist_id = %s"
+        cursor.execute(query, (track_id,))
+        tags = cursor.fetchall()
+        tag_ids = [tag['tag_id'] for tag in tags]
+        return tag_ids
+
+    def get_tag_dict(self):
+        """Fetches all tag names and their IDs from the Tags table
+        
+        Args:
+            None
+
+        Returns:
+            A Dict of tag name and tag id
+            [{key: tag_name, value: tag_id}, ..., ...]
+        """
+        cursor = self.conn.cursor(dictionary=True)
+        query = "SELECT tag_id, tag_name FROM Tags"
+        cursor.execute(query)
+        tags = cursor.fetchall()
+        tag_dict = {tag['tag_name']: tag['tag_id'] for tag in tags}
+        return tag_dict
+
+    def close_connection(self):
         self.cnx.close()
