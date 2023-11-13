@@ -434,7 +434,7 @@ class database_api:
         return
 
     def get_recent_tracks(self, user_id):
-        """ Get a user's recent tracks and listening history from database
+        """ Get a user's recent tracks and listening history from database.
 
         Args:
             user_id (int)
@@ -463,7 +463,7 @@ class database_api:
         return recent_tracks
     
     def get_top_tracks(self, user_id):
-        """ Get a user's top tracks and play counts from database
+        """ Get a user's top tracks and play counts from database.
 
         Args:
             user_id (int)
@@ -490,7 +490,7 @@ class database_api:
         return top_tracks
     
     def get_top_artist(self, user_id):
-        """ Get a user's top artists and play counts from database
+        """ Get a user's top artists and play counts from database.
 
         Args:
             user_id (int)
@@ -604,18 +604,18 @@ class database_api:
         cursor.execute(query, (artist_id),)
         result = cursor.fetchone()
         if result:
-            return result[0]
+            return result['artist_name']
         else:
             return None
 
     def get_artist_top_tags(self, artist_id):
-        """Get the artist's top tags from database.
+        """Get the artist's top tags from Artist_Tag table.
 
         Args:
             artist_id (String): the mbid of the artist
 
         Returns:
-            A list of tag names
+            A list of tag IDs
             ["tag1", "tag2", ..., ...]
         """
         cursor = self.conn.cursor(dictionary=True)
@@ -626,13 +626,14 @@ class database_api:
         return tag_ids
 
     def get_track_top_tags(self, track_id):
-        """Get the track's top tags from database.
+        """Get the track's top tags from Track_tag table.
 
         Args:
             track_id (String)
 
         Returns:
-            A list of tag names
+            A list of tag IDs
+            ["tag1", "tag2", ..., ...]
         """
         cursor = self.conn.cursor(dictionary=True)
         query = "SELECT tag_id FROM Track_tag WHERE artist_id = %s"
@@ -642,7 +643,7 @@ class database_api:
         return tag_ids
 
     def get_tag_dict(self):
-        """Fetches all tag names and their IDs from the Tags table
+        """Fetches all tag names and their IDs from Tags table.
         
         Args:
             None
@@ -657,6 +658,47 @@ class database_api:
         tags = cursor.fetchall()
         tag_dict = {tag['tag_name']: tag['tag_id'] for tag in tags}
         return tag_dict
+
+    def get_track_with_tags(self, tags_id_list):
+        """Retrieves tracks that include all specified tags.
+
+        Args:
+            tags_id_list (list): A list of tag IDs (3-4 tags).
+
+        Returns:
+            list: A list of track IDs that include all specified tags.
+            [{"track_id"}, ..., ...]
+        """
+        cursor = self.conn.cursor(dictionary=True)
+        query = """
+        SELECT track_id 
+        FROM Track_tag 
+        WHERE tag_id IN %s
+        GROUP BY track_id
+        HAVING COUNT(DISTINCT tag_id) = %s
+        """
+        cursor.execute(query, (tuple(tags_id_list), len(tags_id_list)))
+        tracks = cursor.fetchall()
+        track_ids = {track['track_id'] for track in tracks}
+        return track_ids
+        
+    def get_artist_from_track(self, track_id):
+        """Get artist_id with the input track_id
+        
+        Args:
+            track_id(String)
+
+        Returns:
+            artist_id(String)
+        """
+        cursor = self.conn.cursor(dictionary=True)
+        query = "SELECT artist_id FROM Tracks Where Tracks.track_id = %s"
+        cursor.execute(query, (track_id,))
+        result = cursor.fetchone()
+        if result:
+            return result['artist_id']
+        else:
+            return None
 
     def close_connection(self):
         self.cnx.close()
