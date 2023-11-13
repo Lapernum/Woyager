@@ -434,14 +434,14 @@ class database_api:
         return
 
     def get_recent_tracks(self, user_id):
-        """Needs modification
+        """ Get a user's recent tracks and listening history from database
 
         Args:
-            tags (List): a list of tags in this format
-                [{"tag_name", "tag_url"}, ..., ...]
+            user_id (int)
 
         Returns:
-            int: the number of new tags added to the database without duplication
+            recent_tracks: a Dict of tracks in this format
+                {key: track_id, value: list[timestamp]}
         """
         cursor = self.conn.cursor(dictionary=True)
         query = """
@@ -463,14 +463,14 @@ class database_api:
         return recent_tracks
     
     def get_top_tracks(self, user_id):
-        """Needs modification
+        """ Get a user's top tracks and play counts from database
 
         Args:
-            tags (List): a list of tags in this format
-                [{"tag_name", "tag_url"}, ..., ...]
+            user_id (int)
 
         Returns:
-            int: the number of new tags added to the database without duplication
+            top_tracks: a Dict of tracks in this format
+                 {key: track_id, value: count}
         """
         cursor = self.conn.cursor(dictionary=True)
         query = """
@@ -489,14 +489,14 @@ class database_api:
         return top_tracks
     
     def get_top_artist(self, user_id):
-        """Needs modification
+        """ Get a user's top artists and play counts from database
 
         Args:
-            tags (List): a list of tags in this format
-                [{"tag_name", "tag_url"}, ..., ...]
+            user_id (int)
 
         Returns:
-            int: the number of new tags added to the database without duplication
+            top_artist: a Dict of artists in this format
+                 {key: artist_id, value: count}
         """
         cursor = self.conn.cursor(dictionary=True)
         query = """
@@ -515,14 +515,14 @@ class database_api:
         return top_artist
     
     def get_all_listening_history_tracks(self):
-        """Needs modification
+        """ Fetches all tracks from the listening history.
 
         Args:
-            tags (List): a list of tags in this format
-                [{"tag_name", "tag_url"}, ..., ...]
+            None
 
         Returns:
-            int: the number of new tags added to the database without duplication
+            historyTracks_dict: a Dict of tracks in this format
+                {key: track_name, value: track_id}
         """
         cursor = self.conn.cursor(dictionary=True)
         query = "SELECT tracks.track_name, listening_history.track_id FROM listening_history JOIN tracks ON listening_history.track_id = tracks.track_id"
@@ -532,14 +532,13 @@ class database_api:
         return historyTracks_dict
     
     def get_all_top_tracks(self):
-        """Needs modification
-
+        """ Fetches all tracks from the top track table.
         Args:
-            tags (List): a list of tags in this format
-                [{"tag_name", "tag_url"}, ..., ...]
+            None
 
         Returns:
-            int: the number of new tags added to the database without duplication
+            topTracks_dict: a Dict of tracks in this format
+                {key: track_name, value: track_id}
         """
         cursor = self.conn.cursor(dictionary=True)
         query = "SELECT tracks.track_name, top_track.track_id FROM top_track JOIN tracks ON top_track.track_id = tracks.track_id"
@@ -549,14 +548,13 @@ class database_api:
         return topTracks_dict
     
     def get_all_top_artists(self):
-        """Needs modification
-
+        """Fetches all artists from the top artist table.
         Args:
-            tags (List): a list of tags in this format
-                [{"tag_name", "tag_url"}, ..., ...]
+            None
 
         Returns:
-            int: the number of new tags added to the database without duplication
+            artist_dict: a Dict of artists in this format
+                {key: artist_name, value: artist_id}
         """
         cursor = self.conn.cursor(dictionary=True)
         query = "SELECT Artists.artist_name, top_artist.artist_id FROM top_artist JOIN artists ON top_artist.artist_id = Artists.artist_id"
@@ -564,6 +562,21 @@ class database_api:
         top_artist = cursor.fetchall()
         artist_dict = {track['artist_name']: track['artist_id'] for artist in top_artist}
         return artist_dict
+    
+    def get_all_users(self):
+        """Fetches all user IDs from the users table.
+        Args:
+            None
+
+        Returns:
+            all_user_id: A list of user IDs.
+        """
+        cursor = self.conn.cursor(dictionary=True)
+        query = "SELECT user_id FROM Users"
+        cursor.execute(query)
+        users = cursor.fetchall()
+        all_user_id = [user['user_id'] for user in users]
+        return all_user_id
 
     def close_connection(self):
         """Needs modification
