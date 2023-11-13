@@ -61,7 +61,6 @@ create table Listening_history (
 create table Tags (
 	tag_id BIGINT NOT NULL AUTO_INCREMENT,
     tag_name VARCHAR(50) NOT NULL,
-    tag_url VARCHAR(100) NOT NULL,
     primary key (tag_id)
 );
 
