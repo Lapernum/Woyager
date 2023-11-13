@@ -72,7 +72,7 @@ class lastfm_api:
 
         Returns:
             List: a list of the user's top tracks in this format
-                [{"track_name", "track_id", "track_url", "listened_at", "artist_id"}, ..., ...]
+                [{"track_name", "track_url", "listened_at", "artist_id"}, ..., ...]
                 where listened_at has been transformed from a timestamp into a python string
         """
         url = f'{self.base_url}?method=user.getTopTracks&user={username}&api_key={self.api_key}&format=json'
@@ -82,12 +82,11 @@ class lastfm_api:
             data = response.json()
             top_tracks = []
             for track in data['toptracks']['track']:
-                track_id = track['mbid']
                 track_name = track['name']
                 track_url = track['url']
                 count = int(track['playcount'])
                 artist_id = track['artist']['mbid']
-                top_tracks.append({'track_name': track_name, 'track_id': track_id, 'track_url': track_url, 'track_listening_count': count, 'artist_id': artist_id})
+                top_tracks.append({'track_name': track_name, 'track_url': track_url, 'track_listening_count': count, 'artist_id': artist_id})
             return top_tracks
         else:
             return None
@@ -138,26 +137,6 @@ class lastfm_api:
                 count = int(track['playcount'])
                 top_tracks.append({'track_name': track_name, 'track_listening_count': count})
             return top_tracks
-        else:
-            return None
-
-    def get_track_id(self, track_name, artist_name):
-        """Get the track id based on the track name and the artist name.
-
-        Args:
-            track_name (String): the name of the track
-            artist_name (String): the name of the artist of the track
-
-        Returns:
-            String: the mbid of the track
-        """
-        url = f'{self.base_url}?method=track.getInfo&artist={artist_name}&track={track_name}&api_key={self.api_key}&format=json'
-        response = requests.get(url)
-
-        if response.status_code == 200:
-            data = response.json()
-            track_id = data["track"]["mbid"]
-            return track_id
         else:
             return None
         
@@ -264,7 +243,7 @@ class database_api:
         self.cnx_cursor = self.cnx.cursor()
 
     def save_users(self, users):
-        """Save a list of users into database.
+        """Save a list of users into database without duplication.
 
         Args:
             users (List): a list of users in this format
@@ -307,19 +286,32 @@ class database_api:
         return
     
     def save_tracks(self, tracks):
-        """Save a list of tracks into the database.
+        """Save a list of tracks into the database without duplication.
 
         Args:
             tracks (List): a list of artists in this format
-                [{"track_id", "track_name", "track_url", "artist_id"}, ..., ...]
+                [{"track_name", "track_url", "artist_id"}, ..., ...]
+        
+        Returns:
+            int: the number of new tracks added to the database without duplication
         """
-        track_list = [(track["track_id"], track["track_name"], track["track_url"], track["artist_id"]) for track in tracks]
+        sql_fetch = "SELECT track_name, artist_id FROM Tracks"
+        self.cnx_cursor.execute(sql_fetch)
+        already_in = self.cnx_cursor.fetchall()
+        already_ins = [a[0] for a in already_in]
 
-        sql_save = "INSERT IGNORE INTO Tracks (track_id, track_name, track_url, artist_id) VALUES (%s, %s, %s, %s)"
+        track_list = []
+        for track in tracks:
+            if (track["track_name"], track["artist_id"]) not in already_ins:
+                track_list.append((track["track_name"], track["track_url"], track["artist_id"]))
+
+        newly_added_length = len(track_list)
+
+        sql_save = "INSERT IGNORE INTO Tracks (track_name, track_url, artist_id) VALUES (%s, %s, %s)"
 
         self.cnx_cursor.executemany(sql_save, track_list)
         self.cnx.commit()
-        return
+        return newly_added_length
     
     def save_top_tracks(self, username, top_tracks):
         """Save a list of top tracks of a given user to the database.
