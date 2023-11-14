@@ -34,12 +34,31 @@ class lastfm_api:
             data = response.json()
             recent_tracks = []
             for track in data['recenttracks']['track']:
-                track_name = track['name']
-                track_url = track['url']
-                timestamp = track['date']['uts']
-                timestamp = datetime.datetime.fromtimestamp(timestamp).strftime('%d %b %Y, %H:%M')
-                artist_id = track['artist']['mbid']
-                recent_tracks.append({'track_name' : track_name, 'track_url': track_url, 'listened_at' : timestamp, 'artist_id': artist_id})
+                try:
+                    track_name = track['name']
+                    track_url = track['url']
+                    # Check if 'date' and 'uts' are present in the track info
+                    if 'date' in track and 'uts' in track['date']:
+                        timestamp = int(track['date']['uts'])
+                        timestamp = datetime.datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+                    else:
+                        timestamp = 'Unknown'  # or use the current time, or skip the track, etc.
+                    
+                    artist_id = track['artist']['mbid'] if 'mbid' in track['artist'] else 'Unknown'
+                    
+                    recent_tracks.append({
+                        'track_name': track_name, 
+                        'track_url': track_url, 
+                        'listened_at': timestamp, 
+                        'artist_id': artist_id
+                    })
+                except KeyError as e:
+                    print(f"Missing expected field: {e}")
+                except ValueError as e:
+                    print(f"Value error: {e} - this is likely due to incorrect timestamp format")
+                except Exception as e:
+                    print(f"An unexpected error occurred: {e}")
+
             return recent_tracks
         else:
             return None
@@ -99,8 +118,20 @@ class lastfm_api:
 
         if response.status_code == 200:
             data = response.json()
+            print(data["track"])
             track_id = data["track"]["mbid"]
             return track_id
+        else:
+            return None
+        
+    def get_artist_name(self, artist_id):
+        url = f'{self.base_url}?method=artist.getInfo&mbid={artist_id}&api_key={self.api_key}&format=json'
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            data = response.json()
+            artist_name = data["artist"]["name"]
+            return artist_name
         else:
             return None
         
@@ -246,7 +277,7 @@ class database_api:
     
     def save_listening_history(self, username, recent_tracks):
         sql_getuserid = "SELECT user_id FROM Users WHERE user_name = %s"
-        self.cnx_cursor.execute(sql_getuserid, username)
+        self.cnx_cursor.execute(sql_getuserid, (username,))
         user_id = self.cnx_cursor.fetchall()[0]
 
         track_list = [(user_id, track["track_id"], track["listened_at"]) for track in recent_tracks]
