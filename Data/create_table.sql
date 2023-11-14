@@ -26,7 +26,7 @@ create table Artists (
 );
 
 create table Tracks (
-	track_id VARCHAR(100) NOT NULL,
+	track_id VARCHAR(100) NOT NULL AUTO_INCREMENT,
     track_name VARCHAR(50) NOT NULL,
     track_url VARCHAR(100) NOT NULL,
     artist_id VARCHAR(100) NOT NULL,
@@ -61,7 +61,6 @@ create table Listening_history (
 create table Tags (
 	tag_id BIGINT NOT NULL AUTO_INCREMENT,
     tag_name VARCHAR(50) NOT NULL,
-    tag_url VARCHAR(100) NOT NULL,
     primary key (tag_id)
 );
 
