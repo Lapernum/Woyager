@@ -6,7 +6,7 @@ import datetime
 import mysql.connector
 from mysql.connector import errorcode
 
-from .utils import normalizeTag
+from utils import normalizeTag
 
 # Fetches user features from API.
 class lastfm_api:
@@ -15,6 +15,48 @@ class lastfm_api:
         conf_data = json.load(conf)
         self.api_key = conf_data["API_KEY"]
         self.base_url = 'http://ws.audioscrobbler.com/2.0/'
+
+    def get_artist_name(self, artist_id):
+        """Get the artist name from last.fm API.
+
+        Args:
+            artist_id (String): the mbid of the artist
+        
+        Returns:   
+            artist_name(String)
+        """
+        url = f'{self.base_url}?method=artist.getInfo&mbid={artist_id}&api_key={self.api_key}&format=json'
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            data = response.json()
+            artist_name = data['artist']['name']
+            return artist_name
+        else:
+            return None
+        
+    def get_track_id(self, track_name, artist_name):
+        """Get the track id from last.fm API.
+
+        Args:
+            track_name (String): the name of the track
+            artist_name (String): the name of the artist of the track
+
+        Returns:
+            track_id(String)
+        """
+        url = f'{self.base_url}?method=track.getInfo&artist={artist_name}&track={track_name}&api_key={self.api_key}&format=json'
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            try:
+                data = response.json()
+                track_id = data['track']['mbid']
+                return track_id
+            except:
+                return None
+        else:
+            return None
 
     # Return a list of info json of friends
     def get_user_friends(self, username):
@@ -37,32 +79,51 @@ class lastfm_api:
         else:
             return None
 
-    def get_recent_tracks(self, username):
-        """Get the user's recent tracks.
+
+    def get_recent_tracks(self, username, page_limit=10):
+        """Get the user's recent tracks with pagination.
 
         Args:
-            username (String): the username of the user
+            username (str): The username of the user.
+            page_limit (int): Maximum number of pages to fetch.
 
         Returns:
-            List: a list of the user's recent tracks in this format
+            list: A list of the user's recent tracks in this format
                 [{"track_name", "track_url", "listened_at", "artist_id"}, ..., ...]
         """
-        url = f'{self.base_url}?method=user.getRecentTracks&user={username}&api_key={self.api_key}&format=json'
-        response = requests.get(url)
+        recent_tracks = []
+        page = 1
 
-        if response.status_code == 200:
-            data = response.json()
-            recent_tracks = []
-            for track in data['recenttracks']['track']:
-                track_name = track['name']
-                track_url = track['url']
-                timestamp = track['date']['uts']
-                timestamp = datetime.datetime.fromtimestamp(timestamp).strftime('%d %b %Y, %H:%M')
-                artist_id = track['artist']['mbid']
-                recent_tracks.append({'track_name' : track_name, 'track_url': track_url, 'listened_at' : timestamp, 'artist_id': artist_id})
-            return recent_tracks
-        else:
-            return None
+        while  page <= page_limit:
+            url = (f'{self.base_url}?method=user.getRecentTracks&user={username}'
+                f'&api_key={self.api_key}&format=json&limit=100&page={page}')
+            response = requests.get(url)
+
+            if response.status_code == 200:
+                data = response.json()
+                total_pages = int(data['recenttracks']['@attr']['totalPages'])  # Get total number of pages
+
+                for track in data['recenttracks']['track']:
+                    # Sometimes the track doesn't have a date (currently playing track), so we check for its existence
+                    if 'date' in track:
+                        track_name = track['name']
+                        track_url = track['url']
+                        timestamp = int(track['date']['uts'])
+                        listened_at = datetime.datetime.fromtimestamp(timestamp).strftime('%d %b %Y, %H:%M')
+                        artist_id = track['artist']['mbid']
+                        recent_tracks.append({
+                            'track_name': track_name,
+                            'track_url': track_url,
+                            'listened_at': listened_at,
+                            'artist_id': artist_id
+                        })
+            else:
+                # Break out of the loop if there's an HTTP error
+                break
+
+            page += 1  # Increment to the next page
+
+        return recent_tracks
 
     def get_top_tracks(self, username):
         """Get the user's top tracks.
