@@ -15,6 +15,7 @@ class lastfm_api:
         conf_data = json.load(conf)
         self.api_key = conf_data["API_KEY"]
         self.base_url = 'http://ws.audioscrobbler.com/2.0/'
+    
 
     def get_artist_name(self, artist_id):
         """Get the artist name from last.fm API.
@@ -30,8 +31,32 @@ class lastfm_api:
 
         if response.status_code == 200:
             data = response.json()
+            print(data)
             artist_name = data['artist']['name']
             return artist_name
+        else:
+            return None
+    
+    def get_artist_info(self, artist_name):
+        """Get the artist info from last.fm API.
+
+        Args:
+            artist_name (String): the name of the artist
+            track_name (String): the name of the track
+
+        Returns:
+            Dict: a dict of the artist's info in this format
+                {"artist_name", "artist_url"}]
+        """
+        url = f'{self.base_url}?method=artist.getInfo&artist={artist_name}&&api_key={self.api_key}&format=json'
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            data = response.json()
+
+            artist_name = data['artist']['name']
+            artist_url = data['artist']['url']
+            return {'artist_name': artist_name, 'artist_url': artist_url}
         else:
             return None
         
@@ -109,7 +134,7 @@ class lastfm_api:
                         track_name = track['name']
                         track_url = track['url']
                         timestamp = int(track['date']['uts'])
-                        listened_at = datetime.datetime.fromtimestamp(timestamp).strftime('%d %b %Y, %H:%M')
+                        listened_at = datetime.datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
                         artist_id = track['artist']['mbid']
                         recent_tracks.append({
                             'track_name': track_name,
@@ -133,10 +158,10 @@ class lastfm_api:
 
         Returns:
             List: a list of the user's top tracks in this format
-                [{"track_name", "track_url", "listened_at", "artist_id"}, ..., ...]
+                [{"track_name", "track_url", "track_listening_count", "artist_id"}, ..., ...]
                 where listened_at has been transformed from a timestamp into a python string
         """
-        url = f'{self.base_url}?method=user.getTopTracks&user={username}&api_key={self.api_key}&format=json'
+        url = f'{self.base_url}?method=user.getTopTracks&user={username}&api_key={self.api_key}&limit=100&format=json&page=1'
         response = requests.get(url)
 
         if response.status_code == 200:
@@ -162,17 +187,18 @@ class lastfm_api:
             List: a list of the user's top artists in this format
                 [{"artist_id", "artist_name", "artist_listening_count"}, ..., ...]
         """
-        url = f'{self.base_url}?method=user.getTopTracks&user={username}&api_key={self.api_key}&format=json'
+        url = f'{self.base_url}?method=user.getTopArtists&user={username}&api_key={self.api_key}&format=json&limit=100&format=json&page=1'
         response = requests.get(url)
 
         if response.status_code == 200:
             data = response.json()
             top_artists = []
             for artist in data['topartists']['artist']:
-                artist_id = artist['mbid']
-                artist_name = artist['name']
+                url = artist['url']
                 count = int(artist['playcount'])
-                top_artists.append({'artist_id': artist_id, 'artist_name' : artist_name, 'artist_listening_count' : count})
+                start = len("https://www.last.fm/music/")
+                artist_name = url[start:]
+                top_artists.append({'artist_name' : artist_name, 'artist_listening_count' : count, 'artist_url': url})
             return top_artists
         else:
             return None
@@ -336,11 +362,11 @@ class database_api:
 
         Args:
             artists (List): a list of artists in this format
-                [{"artist_id", "artist_name", "artist_url"}, ..., ...]
+                [{"artist_name", "artist_url"}, ..., ...]
         """
-        artist_list = [(artist["artist_id"], artist["artist_name"], artist["artist_url"]) for artist in artists]
+        artist_list = [(artist["artist_name"], artist["artist_url"]) for artist in artists]
 
-        sql_save = "INSERT IGNORE INTO Artists (artist_id, artist_name, artist_url) VALUES (%s, %s, %d)"
+        sql_save = "INSERT IGNORE INTO Artists (artist_name, artist_url) VALUES (%s, %s)"
 
         self.cnx_cursor.executemany(sql_save, artist_list)
         self.cnx.commit()
@@ -356,25 +382,18 @@ class database_api:
         Returns:
             int: the number of new tracks added to the database without duplication
         """
-        sql_fetch = "SELECT track_name, artist_id FROM Tracks"
-        self.cnx_cursor.execute(sql_fetch)
-        already_in = self.cnx_cursor.fetchall()
-        already_ins = [a[0] for a in already_in]
+        sql_save = "INSERT IGNORE INTO Tracks (track_id, track_name, track_url, artist_name) VALUES (%s, %s, %s, %s)"
+        track_list = [(track["track_id"], track["track_name"], track["track_url"], track["artist_name"]) for track in tracks]
+        try:
+                self.cnx_cursor.executemany(sql_save, track_list)
+                self.cnx.commit()
+                return 
 
-        track_list = []
-        for track in tracks:
-            if (track["track_name"], track["artist_id"]) not in already_ins:
-                track_list.append((track["track_name"], track["track_url"], track["artist_id"]))
+        except Exception as e:
+            print(f"Error when saving tracks: {e}")
 
-        newly_added_length = len(track_list)
-
-        sql_save = "INSERT IGNORE INTO Tracks (track_name, track_url, artist_id) VALUES (%s, %s, %s)"
-
-        self.cnx_cursor.executemany(sql_save, track_list)
-        self.cnx.commit()
-        return newly_added_length
     
-    def save_top_tracks(self, username, top_tracks):
+    def save_top_tracks(self, user_id, top_tracks):
         """Save a list of top tracks of a given user to the database.
 
         Args:
@@ -382,19 +401,16 @@ class database_api:
             top_tracks (List): a list of tracks in this format
                 [{"track_id", "track_listening_count"}, ..., ...]
         """
-        sql_getuserid = "SELECT user_id FROM Users WHERE user_name = %s"
-        self.cnx_cursor.execute(sql_getuserid, username)
-        user_id = self.cnx_cursor.fetchall()[0]
 
         track_list = [(user_id, track["track_id"], track["track_listening_count"]) for track in top_tracks]
 
-        sql_save = "INSERT IGNORE INTO Top_track (user_id, track_id, track_listening_count) VALUES (%d, %s, %d)"
+        sql_save = "INSERT INTO Top_track (user_id, track_id, track_listening_count) VALUES (%s, %s, %s)"
 
         self.cnx_cursor.executemany(sql_save, track_list)
         self.cnx.commit()
         return
     
-    def save_top_artists(self, username, top_artists):
+    def save_top_artists(self, user_id, top_artists):
         """Save a list of top artists of a given user to the database.
 
         Args:
@@ -402,33 +418,28 @@ class database_api:
             top_artists (List): a list of artists in this format
                 [{"artist_id", "artist_listening_count"}, ..., ...]
         """
-        sql_getuserid = "SELECT user_id FROM Users WHERE user_name = %s"
-        self.cnx_cursor.execute(sql_getuserid, username)
-        user_id = self.cnx_cursor.fetchall()[0]
 
-        artist_list = [(user_id, artist["artist_id"], artist["artist_listening_count"]) for artist in top_artists]
+        artist_list = [(user_id, artist["artist_name"], artist["artist_listening_count"]) for artist in top_artists]
 
-        sql_save = "INSERT IGNORE INTO Top_artist (user_id, artist_id, artist_listening_count) VALUES (%d, %s, %d)"
+        sql_save = "INSERT IGNORE INTO Top_artist (user_id, artist_name, artist_listening_count) VALUES (%s, %s, %s)"
 
         self.cnx_cursor.executemany(sql_save, artist_list)
         self.cnx.commit()
         return
     
-    def save_listening_history(self, username, recent_tracks):
+    def save_listening_history(self, user_id, recent_tracks):
         """Save a list of recent tracks of a given user to the database.
 
         Args:
-            username (String): the name of the user
+            userid (Int): the id of the user
             recent_tracks (List): a list of tracks in this format
                 [{"track_id", "listened_at"}, ..., ...]
         """
-        sql_getuserid = "SELECT user_id FROM Users WHERE user_name = %s"
-        self.cnx_cursor.execute(sql_getuserid, username)
-        user_id = self.cnx_cursor.fetchall()[0]
-
         track_list = [(user_id, track["track_id"], track["listened_at"]) for track in recent_tracks]
 
-        sql_save = "INSERT IGNORE INTO Listening_history (user_id, track_id, listened_at) VALUES (%d, %s, %s)"
+        print(track_list)
+
+        sql_save = "INSERT IGNORE INTO Listening_history (user_id, track_id, listened_at) VALUES (%s, %s, %s)"
 
         self.cnx_cursor.executemany(sql_save, track_list)
         self.cnx.commit()
@@ -534,20 +545,21 @@ class database_api:
                 [{key: track_id, value: track_listening_count}, ..., ...]
                  
         """
-        cursor = self.conn.cursor(dictionary=True)
         query = """
-        SELECT Tracks.tract_name, Top_track.track_listening_count
+        SELECT Top_track.track_id, Top_track.track_listening_count
         FROM Top_track
-        JOIN Tracks ON Top_track.track_id = Tracks.track_id
         WHERE Top_track.user_id = %s
         """
+        cursor = self.cnx.cursor(dictionary=True)
         cursor.execute(query, (user_id,))
         top_tracks = {}
+        
         for row in cursor.fetchall():
-            track_name = row['tract_name']
+            track_id = row['track_id']
             track_listening_count = row['track_listening_count']
-            top_tracks[track_name] = track_listening_count
+            top_tracks[track_id] = track_listening_count
 
+        cursor.close()
         return top_tracks
     
     def get_top_artist(self, user_id):
@@ -560,13 +572,12 @@ class database_api:
             top_artist: a Dict of artists in this format
                 [{key: artist_id, value: artist_listening_count}, ..., ...]
         """
-        cursor = self.conn.cursor(dictionary=True)
         query = """
-        SELECT Artist.artist_name, Top_artist.artist_listening_count
-        FROM Artist
-        JOIN Top_artist ON Artist.artist_id = Top_artist.artist_id
+        SELECT Top_artist.artist_name, Top_artist.artist_listening_count
+        FROM Top_artist
         WHERE Top_artist.user_id = %s
         """
+        cursor = self.cnx.cursor(dictionary=True)
         cursor.execute(query, (user_id,))
         top_artist = {}
         for row in cursor.fetchall():
@@ -642,14 +653,12 @@ class database_api:
             None
 
         Returns:
-            all_user_id: A list of user IDs.
+            list: a list of tuples (user_id, user_name)
         """
-        cursor = self.conn.cursor(dictionary=True)
-        query = "SELECT user_id FROM Users"
-        cursor.execute(query)
-        users = cursor.fetchall()
-        all_user_id = [user['user_id'] for user in users]
-        return all_user_id
+        query = "SELECT user_id, user_name FROM Users"
+        self.cnx_cursor.execute(query)
+        users = self.cnx_cursor.fetchall()
+        return users
     
     def get_artist_name(self, artist_id):
         """Get the artist name from Artists table.
@@ -760,6 +769,31 @@ class database_api:
             return result['artist_id']
         else:
             return None
+    
+    def get_user_features(self, user_id):
+        """Get a user's features from database.
+
+        Args:
+            user_id (int)
+
+        Returns:
+            Dict: a dict of the user's features in this format
+                {"recent_tracks", "top_tracks", "top_artists"}
+        """
+        top_tracks = self.get_top_tracks(user_id)
+        top_artists = self.get_top_artist(user_id)
+        return {"top_tracks": top_tracks, "top_artists": top_artists}
+        
+    def clear_table(self, table_name):
+        """Clear a table.
+
+        Args:
+            table_name (str): The name of the table to clear.
+        """
+        sql_clear = f"TRUNCATE TABLE {table_name}"
+        self.cnx_cursor.execute(sql_clear)
+        self.cnx.commit()
+
 
     def close_connection(self):
         self.cnx.close()

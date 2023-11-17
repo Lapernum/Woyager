@@ -1,4 +1,3 @@
-from Data.data_api import api_get_user_feature
 import openai
 import datetime
 import math
@@ -62,7 +61,7 @@ def calculate_top_tracks_score(top_tracks):
 def calculate_top_artists_score(top_artists):
     """
     calculate the score of user's top_artists feature
-    :param top_artists: Dict {key: artist_id, value: play_count}
+    :param top_artists: List [artist_name]
     :return: Dict {key: artist_id, value: score}
     """
     artists_score = {}
@@ -94,8 +93,7 @@ def fetch_user_tag(top_artists):
     model="gpt-4",
     temperature=0,
     messages=[
-        {"role": "user", "content": "Based on the artists, describe a user's music taste with 2-5 genre words and scores. E.g., Punk: 0.7, Indie: 0.8, Alternative: 0.9."},
-        {"role": "user", "content": str(top_artists.keys())}
+        {"role": "user", "content": "Based on the artists, describe a user's music taste with 2-5 genre words and scores. E.g., Punk: 0.7, Indie: 0.8, Alternative: 0.9. " + str(top_artists)},
     ]
     )
     return response['choices'][0]['message']['content']
