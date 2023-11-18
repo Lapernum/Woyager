@@ -6,10 +6,7 @@ import datetime
 import mysql.connector
 from mysql.connector import errorcode
 
-# import sys
-# import os
-# # sys.path.insert(0, "Data")
-# sys.path.append(os.path.join("D:/GATECH/TreeMusicRecommendation"))
+
 from Data.utils import normalizeTag
 
 # Fetches user features from API.
@@ -35,7 +32,7 @@ class lastfm_api:
 
         if response.status_code == 200:
             data = response.json()
-            print(data)
+            # print(data)
             artist_name = data['artist']['name']
             return artist_name
         else:
@@ -140,11 +137,13 @@ class lastfm_api:
                         timestamp = int(track['date']['uts'])
                         listened_at = datetime.datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
                         artist_id = track['artist']['mbid']
+                        artist_name = track['artist']['#text']
                         recent_tracks.append({
                             'track_name': track_name,
                             'track_url': track_url,
                             'listened_at': listened_at,
-                            'artist_id': artist_id
+                            'artist_id': artist_id,
+                            'artist_name': artist_name
                         })
             else:
                 # Break out of the loop if there's an HTTP error
@@ -176,7 +175,8 @@ class lastfm_api:
                 track_url = track['url']
                 count = int(track['playcount'])
                 artist_id = track['artist']['mbid']
-                top_tracks.append({'track_name': track_name, 'track_url': track_url, 'track_listening_count': count, 'artist_id': artist_id})
+                artist_name = track['artist']['name']
+                top_tracks.append({'track_name': track_name, 'track_url': track_url, 'track_listening_count': count, 'artist_id': artist_id, 'artist_name': artist_name})
             return top_tracks
         else:
             return None
