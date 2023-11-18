@@ -6,7 +6,11 @@ import datetime
 import mysql.connector
 from mysql.connector import errorcode
 
-from utils import normalizeTag
+# import sys
+# import os
+# # sys.path.insert(0, "Data")
+# sys.path.append(os.path.join("D:/GATECH/TreeMusicRecommendation"))
+from Data.utils import normalizeTag
 
 # Fetches user features from API.
 class lastfm_api:
@@ -548,7 +552,7 @@ class database_api:
             recent_tracks: a Dict of tracks in this format
                 [{key: track_id, value: list[timestamp]}, ..., ...]
         """
-        cursor = self.conn.cursor(dictionary=True)
+        cursor = self.cnx.cursor(dictionary=True)
         query = """
         SELECT Tracks.track_name, Listening_history.listened_at
         FROM listening_history
@@ -630,7 +634,7 @@ class database_api:
             historyTracks_dict: a Dict of tracks in this format
                 [{key: track_name, value: track_id}, ..., ...]
         """
-        cursor = self.conn.cursor(dictionary=True)
+        cursor = self.cnx.cursor(dictionary=True)
         query = """
         SELECT Tracks.track_name, Listening_history.track_id 
         FROM Listening_history 
@@ -650,7 +654,7 @@ class database_api:
             topTracks_dict: a Dict of tracks in this format
                 [{key: track_name, value: track_id}, ..., ...]
         """
-        cursor = self.conn.cursor(dictionary=True)
+        cursor = self.cnx.cursor(dictionary=True)
         query = """
         SELECT Tracks.track_name, Top_track.track_id 
         FROM Top_track 
@@ -669,7 +673,7 @@ class database_api:
             artist_dict: a Dict of artists in this format
                 [{key: artist_name, value: artist_id}, ..., ...]
         """
-        cursor = self.conn.cursor(dictionary=True)
+        cursor = self.cnx.cursor(dictionary=True)
         query = """
         SELECT Artists.artist_name, Top_artist.artist_id 
         FROM Top_artist 
@@ -702,7 +706,7 @@ class database_api:
         Returns:
             artist_name(String)
         """
-        cursor = self.conn.cursor(dictionary=True)
+        cursor = self.cnx.cursor(dictionary=True)
         query = "SELECT artist_name FROM Artists WHERE artist_id = %s"
         cursor.execute(query, (artist_id),)
         result = cursor.fetchone()
@@ -721,7 +725,7 @@ class database_api:
             A list of tag IDs
             ["tag1", "tag2", ..., ...]
         """
-        cursor = self.conn.cursor(dictionary=True)
+        cursor = self.cnx.cursor(dictionary=True)
         query = "SELECT tag_id FROM Artist_Tag WHERE artist_id = %s"""
         cursor.execute(query, (artist_id,))
         tags = cursor.fetchall()
@@ -738,7 +742,7 @@ class database_api:
             A list of tag IDs
             ["tag1", "tag2", ..., ...]
         """
-        cursor = self.conn.cursor(dictionary=True)
+        cursor = self.cnx.cursor(dictionary=True)
         query = "SELECT tag_id FROM Track_tag WHERE artist_id = %s"
         cursor.execute(query, (track_id,))
         tags = cursor.fetchall()
@@ -755,7 +759,7 @@ class database_api:
             A Dict of tag name and tag id
             [{key: tag_name, value: tag_id}, ..., ...]
         """
-        cursor = self.conn.cursor(dictionary=True)
+        cursor = self.cnx.cursor(dictionary=True)
         query = "SELECT tag_id, tag_name FROM Tags"
         cursor.execute(query)
         tags = cursor.fetchall()
@@ -772,7 +776,7 @@ class database_api:
             list: A list of track IDs that include all specified tags.
             [{"track_id"}, ..., ...]
         """
-        cursor = self.conn.cursor(dictionary=True)
+        cursor = self.cnx.cursor(dictionary=True)
         query = """
         SELECT track_id 
         FROM Track_tag 
@@ -794,7 +798,7 @@ class database_api:
         Returns:
             artist_id(String)
         """
-        cursor = self.conn.cursor(dictionary=True)
+        cursor = self.cnx.cursor(dictionary=True)
         query = "SELECT artist_id FROM Tracks Where Tracks.track_id = %s"
         cursor.execute(query, (track_id,))
         result = cursor.fetchone()

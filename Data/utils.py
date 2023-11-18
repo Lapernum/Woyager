@@ -1,7 +1,7 @@
 import re
 from nltk.stem import PorterStemmer
 
-def normalizeTag(top_tags=None, artist=None, track=None, n=3):
+def normalizeTag(top_tags=None, artist="", track="", n=3):
     '''
     Given a list of (tag, count) pairs for a song that can be retrieved 
     using last.fm api, normalize the tags so they are meaningful. Inspired 
@@ -51,7 +51,7 @@ def normalizeTag(top_tags=None, artist=None, track=None, n=3):
     for tag, (count, idx) in normalized.items():
         norm_original.append((top_tags[idx][0].title(), top_tags[idx][1]))
     
-    return norm_original[:3]
+    return norm_original[:n]
 
 def main():
     print("Hello World!")
