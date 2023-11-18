@@ -4,7 +4,9 @@ import os
 # sys.path.insert(0, "Data")
 sys.path.append(os.path.join("D:/GATECH/TreeMusicRecommendation"))
 from Data.data_api import *
+from datetime import datetime
 import math
+import pdb
 
 class SelfListening:
     def __init__(self, mode='tag', user='rj'):
@@ -21,7 +23,7 @@ class SelfListening:
         self.recent = self.lastapi.get_recent_tracks(user)
 
         # The top artists of the user, list(artist_id)
-        # currently, list(dict(artist_id, artist_name, count))
+        # currently, list(dict(artist_name, count, url))
         self.top_artist = self.lastapi.get_top_artist(user)
 
         # The added tracks that is selected by user in the process, list(track_id)
@@ -36,25 +38,15 @@ class SelfListening:
         # As a dict {track: score}
         self.similarity = {}
 
-        # The top tags from top_track and recent_track, list(tag_id)
+        # Build two track tags cache dictionary
+        self.top_track_tags = list()
+        self.rec_track_tags = list()
+        self.artist_tags = {}
+        self.build_tag_dict()
+
+        # The top tags from top_track and recent_track, dict(tag_name: count)
         self.top_tag = {}
-        idx = 0
-        for artist in self.top_artist:
-            # Assume {tag: count} dict structure
-            artist_id = artist['artist_id']
-            count = artist['playcount']
-            if idx > 20:
-                break
-            artist_tags = self.dbapi.GetArtistTopTags(artist_id)
-            for tag, cnt in artist_tags.items():
-                if tag in self.top_tag:
-                    self.top_tag[tag] += np.log2(count) * cnt
-            idx += 1
-        self.top_tag = sorted(self.top_tag.items(), key=lambda x: x[1], reverse=True)
-        self.top_tag = self.top_tag[:10]
-        max_tag_cnt = max(self.top_tag.values())
-        for tag in self.top_tag:
-            self.top_tag[tag] = math.floor((self.top_tag[tag] / max_tag_cnt) * 100)
+        self.build_top_tags()
         
         
     def add_track(self, added_song):
@@ -81,6 +73,131 @@ class SelfListening:
             self.mode = 'artist'
         else:
             self.mode = 'tag'
+
+    def build_tag_dict(self):
+        '''
+        Build the 2 top_tag cache dict:
+        1. Count the top tags of top tracks and recent tracks
+        2. Store in self.top_track_tags and self.recent_track_tags
+        Input:
+            - None
+        Output:
+            - None: update self.top_track_tags and self.recent_track_tags dictionary
+        '''
+        idx = 0
+        for track in self.top_track:
+            idx += 1
+            if idx > 20:
+                break
+            t_name = track['track_name']
+            a_name = track['artist_name']
+            # Some track does not have artist mbid, even though the artist name is present
+            # if a_id == "":
+            #     self.top_track_tags.append({})
+            #     continue
+            # a_name = self.lastapi.get_artist_name(a_id)
+
+            # Some (t, a) combination does not return track tags
+            # need to return an error code
+            if a_name is not None:
+                # if not error:
+                self.top_track_tags.append(self.lastapi.get_track_tags(t_name, a_name))
+        print("Top track tags cache built")
+        idx = 0
+        for track in self.recent:
+            idx += 1
+            if idx > 5:
+                break
+            t_name = track['track_name']
+            a_name = track['artist_name']
+            # Some track does not have artist mbid, even though the artist name is present
+            # if a_id == "":
+            #     self.top_track_tags.append({})
+            #     continue
+            # a_name = self.lastapi.get_artist_name(a_id)
+            # print(t_name, a_name)
+            if a_name is not None:
+                self.rec_track_tags.append(self.lastapi.get_track_tags(t_name, a_name))
+        print("Recent track tags cache built")
+        
+        for artist in self.top_artist:
+            artist_name = artist['artist_name']
+            count = artist['artist_listening_count']
+            
+            if artist_name in self.artist_tags:
+                continue
+            else:
+                tags = self.lastapi.get_artist_tags(artist_name)
+                self.artist_tags[artist_name] = tags
+        print("Artist tag cache built")
+
+    def build_top_tags(self):
+        '''
+        Build the top_tag dict:
+        1. For top tracks, use tag_count * log(listened count)
+        2. For recent tracks, use tag_count * exp(time_diff * decay)
+        3. For top artists, use tag_count * log(listened count)
+        4. Currently, assign proportion to be 0.6 top track, 0.4 recent track
+        5. Normalize, so the top 1 tag has value 100.
+        Input:
+            - None: require top_track, recent, top_track_tags, rec_track_tags,
+                    and top_artist
+        Output:
+            - None: update self.top_tag dict
+        '''
+        for i in range(len(self.top_track_tags)):
+            if i > 20:
+                break
+            listened_count = self.top_track[i]['track_listening_count']
+            tags = self.top_track_tags[i]
+            for dic in tags:
+                t = dic['tag_name']
+                c = dic['tag_count']
+                # pdb.set_trace()
+                if t in self.top_tag:
+                    self.top_tag[t] += c * np.log(listened_count) * 0.6
+                else:
+                    self.top_tag[t] = c * np.log(listened_count) * 0.6
+        print("Add top_track_tags to top_tags")
+        now = datetime.now()
+        for i in range(len(self.rec_track_tags)):
+            if i > 20:
+                break
+            timestamp = self.recent[i]['listened_at']
+            timestamp = datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S')
+            timediff = (now - timestamp).total_seconds()
+            weight = np.exp(-0.01 * timediff)
+            tags = self.rec_track_tags[i]
+            for dic in tags:
+                t = dic['tag_name']
+                c = dic['tag_count']
+                if t in self.top_tag:
+                    self.top_tag[t] += c * weight * 0.4
+                else:
+                    self.top_tag[t] = c * weight * 0.4
+        print("Add rec_track_tags to top_tags")
+        idx = 0
+        for artist in self.top_artist:
+            if idx > 20:
+                break
+            # Assume {tag: count} dict structure
+            artist_name = artist['artist_name']
+            count = artist['artist_listening_count']
+            
+            artist_tags = self.artist_tags[artist_name]
+            for artist_tag in artist_tags:
+                tag = artist_tag['tag_name']
+                cnt = artist_tag['tag_count']
+                if tag in self.top_tag:
+                    self.top_tag[tag] += np.log(count) * cnt
+            idx += 1
+        print("Add top_artist_tags to top_tags")
+        # pdb.set_trace()
+        max_tag_cnt = max(d for d in self.top_tag.values())
+        self.top_tag = sorted(self.top_tag.items(), key=lambda x: x[1], reverse=True)
+        self.top_tag = dict(self.top_tag[:30])
+
+        self.top_tag = {tag: math.floor((count / max_tag_cnt) * 100) for tag, count in self.top_tag.items()}
 
     def tag_sim_score(self, tag_dict1=None, tag_dict2=None):
         '''
@@ -186,6 +303,8 @@ class SelfListening:
 
 def main():
     user = SelfListening()
+    pdb.set_trace()
+    print(user.top_tag)
     tag1 = {1: 100, 3: 96, 5: 77, 14: 40}
     tag2 = {1: 100, 2: 80, 3: 60, 4: 30}
     score = user.tag_sim_score(tag1, tag2)
@@ -198,7 +317,7 @@ def main():
     print(score2)
     print(score3)
     # Testing purpose
-    user.lastapi.get_top_artist('rj')
+    # user.lastapi.get_top_artist('rj')
 
 if __name__ == "__main__":
     main()
