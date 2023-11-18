@@ -6,10 +6,10 @@ import datetime
 import mysql.connector
 from mysql.connector import errorcode
 
-import sys
-import os
-# sys.path.insert(0, "Data")
-sys.path.append(os.path.join("D:/GATECH/TreeMusicRecommendation"))
+# import sys
+# import os
+# # sys.path.insert(0, "Data")
+# sys.path.append(os.path.join("D:/GATECH/TreeMusicRecommendation"))
 from Data.utils import normalizeTag
 
 # Fetches user features from API.
