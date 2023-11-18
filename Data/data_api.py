@@ -284,6 +284,39 @@ class lastfm_api:
         else:
             return None
         
+    def get_user_features(self, username):
+        """Get a user's features from last.fm API.
+
+        Args:
+            username (String): the username of the user 
+
+        Returns:
+            Dict: a dict of the user's features in this format
+                {"top_tracks", "top_artists"}
+        """
+        top_tracks = self.get_top_tracks(username)
+        top_artists = self.get_top_artist(username)
+        top_tracks_dict = {}
+        top_artists_dict = {}
+
+        for track in top_tracks:
+            url = track['track_url']
+            start = len("https://www.last.fm/music/")
+            end = url.index("/_/")
+
+            artist_name = url[start:end]
+            track_id = artist_name + ": " + track['track_name']            
+            track_listening_count = track['track_listening_count']
+            top_tracks_dict[track_id] = track_listening_count
+        
+        for artist in top_artists:
+            artist_name = artist['artist_name']
+            artist_listening_count = artist['artist_listening_count']
+            top_artists_dict[artist_name] = artist_listening_count
+
+
+        return {"top_tracks": top_tracks_dict, "top_artists": top_artists_dict}
+        
 # Fetches user features from the database.
 class database_api:
     """
