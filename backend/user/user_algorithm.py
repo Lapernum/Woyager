@@ -1,8 +1,14 @@
-import openai
 import datetime
 import math
 import pandas as pd
 import numpy as np
+import urllib
+import ast
+import numpy as np
+import math
+import openai 
+
+openai.api_key = "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"
 
 def calculate_recent_tracks_score(recent_tracks):
     """
@@ -247,6 +253,18 @@ def calculate_user_distance(user_name):
 
 
 
+def urls_to_text(url_encoded_list):
+    """
+    Converts a list of URL-encoded strings to a list of regular text strings.
+    
+    Args:
+    url_encoded_list (list): A list of URL-encoded strings.
+    
+    Returns:
+    list: A list of decoded regular text strings.
+    """
+    # Decode each URL-encoded string in the list
+    return [urllib.parse.unquote_plus(url) for url in url_encoded_list]
 
 
 
