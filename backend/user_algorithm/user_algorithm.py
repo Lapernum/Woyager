@@ -82,7 +82,7 @@ def calculate_top_artists_score(top_artists):
 def fetch_user_tag(top_artists):
     """
     Fetches the top three tags of the user based on the top artists preference of a user
-    :param top_artists: Dict {key: artist_id, value: play_count}
+    :param top_artists: list of artists
     :return: top three tags with each tag as a string
     """
     if not top_artists:
