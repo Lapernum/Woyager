@@ -728,8 +728,11 @@ class database_api:
             List: a list of dictionary in this format
             [{"track_id", "track_name", "artist_name"}, ...]
         """
+        track_id_tuples = []
+        for track_id in track_id_list:
+            track_id_tuples.append((track_id,))
         query = "SELECT track_name, artist_name FROM Tracks WHERE track_id = %s"
-        self.cnx_cursor.executemany(query, track_id_list)
+        self.cnx_cursor.executemany(query, track_id_tuples)
         tracks = self.cnx_cursor.fetchall()
         for idx, track in enumerate(tracks):
             track["track_id"] = track_id_list[idx]
