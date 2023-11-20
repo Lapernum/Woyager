@@ -1,13 +1,13 @@
 import sys
 sys.path.append('.')
-sys.path.append('./Data')
 
 
 import os
 import pandas as pd
 import numpy as np
-from data_api import *
-from backend.user.user_algorithm import *
+from Data.data_api import *
+from backend.user.utils import *
+from scipy.spatial import distance
 
 
 
@@ -43,12 +43,11 @@ def calculate_top_tracks_distance(username, top_tracks_df):
         if track_id in top_tracks_map:
             user_top_tracks[top_tracks_map[track_id]] = user_feature['top_tracks'][track_id]
 
-
     # convert database user features to model input arrays
     top_tracks = top_tracks_df.drop(columns=['user_id']).values
 
     # calculate distance
-    top_tracks_distances = np.sqrt(((top_tracks - user_top_tracks) ** 2).sum(axis=1) / len(user_top_tracks))
+    top_tracks_distances = distance.cdist([user_top_tracks], top_tracks, 'euclidean').flatten() / np.sqrt(len(user_top_tracks))
 
     # map each distance to a user id
     top_tracks_distances_df = pd.DataFrame(top_tracks_distances, columns=['top_tracks_distance'])
@@ -76,7 +75,7 @@ def calculate_top_artists_distance(username, top_artists_df):
     top_artists = top_artists_df.drop(columns=['user_id']).values
 
     # calculate distance
-    top_artists_distances = np.sqrt(((top_artists - user_top_artists) ** 2).sum(axis=1) / len(user_top_artists))
+    top_artists_distances = distance.cdist([user_top_artists], top_artists, 'euclidean').flatten() / np.sqrt(len(user_top_artists))
 
     # map each distance to a user id
     top_artists_distances_df = pd.DataFrame(top_artists_distances, columns=['top_artists_distance'])
@@ -106,8 +105,7 @@ def calculate_top_tags_distance(username, top_tags_df):
     top_tags = top_tags_df.drop(columns=['user_id']).values
 
     # calculate distance
-    top_tags_distances = np.sqrt(((top_tags - user_top_tags) ** 2).sum(axis=1)/len(user_top_tags))
-
+    top_tags_distances = distance.cdist([user_top_tags], top_tags, 'euclidean').flatten() / np.sqrt(len(user_top_tags))
 
     # map each distance to a user id
     top_tags_distances_df = pd.DataFrame(top_tags_distances, columns=['top_tags_distance'])
@@ -135,23 +133,35 @@ def calculate_user_distance(username, top_tracks_df, top_artists_df, top_tags_df
 
 
 
-top_tracks_df = concatenate_feature_csvs("Top Tracks")
-top_tracks_df = top_tracks_df.fillna(0)
 
-top_artists_df = concatenate_feature_csvs("Top Artists")
-top_artists_df = top_artists_df.fillna(0)
+def calculate_user_distance(username, top_tracks_df, top_artists_df, top_tags_df):
+    database = database_api('/Users/ziandong/TreeMusicRecommendation/Data/conf.json')
+    top_tracks_distances_df = calculate_top_tracks_distance(username, top_tracks_df)
+    top_artists_distances_df = calculate_top_artists_distance(username, top_artists_df)
+    top_tags_distances_df = calculate_top_tags_distance(username, top_tags_df)
 
-top_tags_df = concatenate_feature_csvs("Top Tags")
-top_tags_df = top_tags_df.fillna(0)
+    # merge all distances
+    distances_df = top_tracks_distances_df.merge(top_artists_distances_df, on='user_id')
+    distances_df = distances_df.merge(top_tags_distances_df, on='user_id')
+
+    # calculate total distance
+    distances_df['distance'] = distances_df['top_tags_distance'] + distances_df['top_artists_distance'] + distances_df['top_tracks_distance']
+
+    # calculate similarity score
+    distances_df['similarity_score'] = 1 / (1 + 10 * distances_df['distance']) * 100
+
+    # apply normalization to map it into (10,40)
+    distances_df['similarity_score'] = distances_df['similarity_score'].apply(lambda x: 10 + 30 * (x - distances_df['similarity_score'].min()) / (distances_df['similarity_score'].max() - distances_df['similarity_score'].min()))
 
 
-def main():
-    distances_df = calculate_user_distance("Thiagotake", top_tracks_df, top_artists_df, top_tags_df)
+    # sort by distance
+    distances_df = distances_df.sort_values(by=['distance'])
+
+    distances_df['username'] = distances_df['user_id'].apply(lambda x: database.get_user_name(x))
 
     return distances_df
 
 
 
-if __name__ == "__main__":
-    distances_df = main()
-    print(distances_df.head(10))
+
+

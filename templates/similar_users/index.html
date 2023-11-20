@@ -1,0 +1,53 @@
+<!-- similar user mode page -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>D3 Visualization</title>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <style>
+        /* Existing styles */
+        .node {
+            fill: #ccc;
+            stroke: #fff;
+            stroke-width: 2px;
+        }
+
+        .link {
+            stroke: #777;
+            stroke-width: 2px;
+        }
+
+        /* Add this new style for the node text */
+        .node-text {
+            fill: #555;
+            font-size: 10px;
+            pointer-events: none; /* Prevent text from interfering with click events */
+        }
+
+        #progress-bar {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(to right, #3f87a6, #ebf8e1, #f69d3c);
+            background-size: 200% auto;
+            animation: progress-bar 2s linear infinite;
+        }
+
+        @keyframes progress-bar {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+    </style>
+</head>
+<body>
+    <div id="visualization"></div>
+    <div id="progress-bar"></div>
+    <script src="/static/js/similar_user.js"></script>
+</body>
+</html>
+<!-- Login Page -->

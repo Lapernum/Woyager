@@ -6,9 +6,8 @@ import urllib
 import ast
 import numpy as np
 import math
-import openai 
+from openai import OpenAI
 
-openai.api_key = "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"
 
 def calculate_recent_tracks_score(recent_tracks):
     """
@@ -93,16 +92,19 @@ def fetch_user_tag(top_artists):
     """
     if not top_artists:
         return ""
+    client = OpenAI(
+        # defaults to os.environ.get("OPENAI_API_KEY")
+        api_key="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",
+    )
 
-
-    response = openai.ChatCompletion.create(
+    completion = client.chat.completions.create(
     model="gpt-4",
     temperature=0,
     messages=[
         {"role": "user", "content": "Based on the artists, describe a user's music taste with 2-5 genre words and scores. E.g., Punk: 0.7, Indie: 0.8, Alternative: 0.9. " + str(top_artists)},
     ]
     )
-    return response['choices'][0]['message']['content']
+    return completion.choices[0].message.content
 
 
 def get_track_id(track_name, conn):
