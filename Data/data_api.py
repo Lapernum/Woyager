@@ -6,6 +6,9 @@ import datetime
 import mysql.connector
 from mysql.connector import errorcode
 
+import sys
+sys.path.append('.')
+
 
 from Data.utils import normalizeTag
 
@@ -820,6 +823,24 @@ class database_api:
         top_tracks = self.get_top_tracks(user_id)
         top_artists = self.get_top_artist(user_id)
         return {"top_tracks": top_tracks, "top_artists": top_artists}
+    
+    def get_user_name(self, user_id):
+        """Get the user name from Users table.
+
+        Args:
+            user_id (int)
+
+        Returns:
+            user_name(String)
+        """
+        cursor = self.cnx.cursor(dictionary=True)
+        query = "SELECT user_name FROM Users WHERE user_id = %s"
+        cursor.execute(query, (user_id,))
+        result = cursor.fetchone()
+        if result:
+            return result['user_name']
+        else:
+            return None
         
     def clear_table(self, table_name):
         """Clear a table.
