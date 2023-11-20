@@ -103,7 +103,7 @@ class SelfListening:
             if a_name is not None:
                 # if not error:
                 track_tags = self.lastapi.get_track_tags(t_name, a_name)
-                if track_tags is None:
+                if track_tags is None or len(track_tags) == 0:
                     idx -= 1
                     continue
                 tag_dict = {t['tag_name']: t['tag_count'] for t in track_tags}
@@ -124,7 +124,7 @@ class SelfListening:
             # print(t_name, a_name)
             if a_name is not None:
                 track_tags = self.lastapi.get_track_tags(t_name, a_name)
-                if track_tags is None:
+                if track_tags is None or len(track_tags) == 0:
                     idx -= 1
                     continue
                 tag_dict = {t['tag_name']: t['tag_count'] for t in track_tags}
@@ -322,7 +322,7 @@ class SelfListening:
             added += 1
             if added >= 2:
                 break
-
+        pdb.set_trace()
         # TODO: convert tag names into tag id
         tag_ids = self.dbapi.get_tag_id(tag_comb)
 
