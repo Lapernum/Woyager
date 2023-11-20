@@ -8,9 +8,10 @@ from Data.data_api import *
 from datetime import datetime
 import math
 import pdb
+# import operator
 
 class SelfListening:
-    def __init__(self, mode='tag', user='rj'):
+    def __init__(self, user='rj'):
         # print(os.path.join("Data/conf.json"))
         self.dbapi = database_api(os.path.join("Data/conf.json"))
         self.lastapi = lastfm_api(os.path.join("Data/conf.json"))
@@ -24,14 +25,15 @@ class SelfListening:
         self.recent = self.lastapi.get_recent_tracks(user, page_limit=1)
 
         # The top artists of the user, list(artist_id)
-        # currently, list(dict(artist_name, count, url))
+        # currently, list(dict(artist_id, artist_name, count))
         self.top_artist = self.lastapi.get_top_artist(user)
 
+        # For target selection
+        self.target_artist = sorted(self.top_artist, key=lambda x: x['artist_listening_count'], reverse=True)
+        self.target_artist = self.target_artist[:4]
+        self.target_artist = {i['artist_name']: i['artist_listening_count'] for i in self.target_artist}
         # The added tracks that is selected by user in the process, list(track_id)
         self.added_track = list()
-
-        # Mode for the recommend step, either 'tag' or 'artist'
-        self.mode = mode
 
         # The selected tracks from select_songs()
         self.selected = list()
@@ -47,7 +49,13 @@ class SelfListening:
 
         # The top tags from top_track and recent_track, dict(tag_name: count)
         self.top_tag = {}
+        self.target_tag = {}
         self.build_top_tags()
+        # The target tags and artists for frontend: {'tags': list(tags), 'artists': list(artists)}
+        self.target = {'tag': list(self.target_tag.keys()), 'artist': list(self.target_artist.keys())}
+
+        # Mode, depedent on the selected button
+        self.mode = 'tag'
 
         
     def add_track(self, added_song):
@@ -62,18 +70,20 @@ class SelfListening:
         '''
         self.added_track.append(added_song)
 
-    def change_mode(self, mode='artist'):
+    def change_mode(self, pressed=None):
         '''
-        Changes mode according to mode variable
+        Changes mode according to selected item in self.target
 
         Input:
             - mode: either 'tag' or 'artist',
             anythin else will be considered as 'tag'
         '''
-        if mode == 'artist':
+        if pressed in self.target['artist']:
             self.mode = 'artist'
-        else:
+        elif pressed in self.target['tag']:
             self.mode = 'tag'
+        else:
+            raise KeyError("The selected item is neither an artist or a tag")
 
     def build_tag_dict(self):
         '''
@@ -208,8 +218,10 @@ class SelfListening:
         max_tag_cnt = max(d for d in self.top_tag.values())
         self.top_tag = sorted(self.top_tag.items(), key=lambda x: x[1], reverse=True)
         self.top_tag = dict(self.top_tag[:30])
+        self.target_tag = dict(self.top_tag[:6])
 
         self.top_tag = {tag: math.floor((count / max_tag_cnt) * 100) for tag, count in self.top_tag.items()}
+        self.target_tag = {tag: math.floor((count / max_tag_cnt) * 100) for tag, count in self.target_tag.items()}
 
     def tag_sim_score(self, tag_dict1=None, tag_dict2=None):
         '''
@@ -354,6 +366,7 @@ class SelfListening:
 
 def main():
     user = SelfListening()
+    
     # pdb.set_trace()
     print(user.top_tag)
     print(user.select_tag_songs('Classic Rock'))
