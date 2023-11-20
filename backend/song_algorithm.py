@@ -20,7 +20,7 @@ class SelfListening:
 
         # The recent tracks listened by the user, 
         # list(dict(track_name, track_url, listened_at, artist_id))
-        self.recent = self.lastapi.get_recent_tracks(user)
+        self.recent = self.lastapi.get_recent_tracks(user, page_limit=1)
 
         # The top artists of the user, list(artist_id)
         # currently, list(dict(artist_name, count, url))
@@ -84,10 +84,11 @@ class SelfListening:
         Output:
             - None: update self.top_track_tags and self.recent_track_tags dictionary
         '''
+        print('Start cache building')
         idx = 0
         for track in self.top_track:
             idx += 1
-            if idx > 20:
+            if idx > 30:
                 break
             t_name = track['track_name']
             a_name = track['artist_name']
@@ -102,13 +103,16 @@ class SelfListening:
             if a_name is not None:
                 # if not error:
                 track_tags = self.lastapi.get_track_tags(t_name, a_name)
+                if track_tags is None:
+                    idx -= 1
+                    continue
                 tag_dict = {t['tag_name']: t['tag_count'] for t in track_tags}
                 self.top_track_tags.append(tag_dict)
         print("Top track tags cache built")
         idx = 0
         for track in self.recent:
             idx += 1
-            if idx > 5:
+            if idx > 20:
                 break
             t_name = track['track_name']
             a_name = track['artist_name']
@@ -120,11 +124,17 @@ class SelfListening:
             # print(t_name, a_name)
             if a_name is not None:
                 track_tags = self.lastapi.get_track_tags(t_name, a_name)
+                if track_tags is None:
+                    idx -= 1
+                    continue
                 tag_dict = {t['tag_name']: t['tag_count'] for t in track_tags}
                 self.rec_track_tags.append(tag_dict)
         print("Recent track tags cache built")
-        
+        idx = 0 
         for artist in self.top_artist:
+            idx += 1
+            if idx > 20:
+                break
             artist_name = artist['artist_name']
             count = artist['artist_listening_count']
             
@@ -179,6 +189,7 @@ class SelfListening:
         print("Add rec_track_tags to top_tags")
         idx = 0
         for artist in self.top_artist:
+            idx += 1
             if idx > 20:
                 break
             # Assume {tag: count} dict structure
@@ -190,7 +201,7 @@ class SelfListening:
                 
                 if tag in self.top_tag:
                     self.top_tag[tag] += np.log(count) * cnt
-            idx += 1
+            
         print("Add top_artist_tags to top_tags")
         # pdb.set_trace()
         max_tag_cnt = max(d for d in self.top_tag.values())
@@ -283,6 +294,7 @@ class SelfListening:
             - songs: A list of track_id from database
         '''
         tag_comb = list()
+        # list(tag_name)
         apperance = dict()
         for taglist in self.top_track_tags:
             if tag in taglist:
@@ -310,7 +322,10 @@ class SelfListening:
             added += 1
             if added >= 2:
                 break
+
         # TODO: convert tag names into tag id
+        tag_ids = self.dbapi.get_tag_id(tag_comb)
+
         # _mysql_connector.MySQLInterfaceError: Python type tuple cannot be converted
         return self.dbapi.get_track_with_tags(tag_comb)
     
