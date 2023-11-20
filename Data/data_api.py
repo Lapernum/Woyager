@@ -750,8 +750,11 @@ class database_api:
         Returns:
             List: a list of tag ids
         """
+        tag_name_tuples = []
+        for tag_name in tag_name_list:
+            tag_name_tuples.append((tag_name,))
         query = "SELECT tag_id FROM Tags WHERE tag_name = %s"
-        self.cnx_cursor.executemany(query, tag_name_list)
+        self.cnx_cursor.executemany(query, tag_name_tuples)
         tags = self.cnx_cursor.fetchall()
         tag_ids = [tag['tag_id'] for tag in tags]
         return tag_ids
