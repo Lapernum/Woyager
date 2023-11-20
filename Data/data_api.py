@@ -224,6 +224,8 @@ class lastfm_api:
 
         if response.status_code == 200:
             data = response.json()
+            if "error" in data:
+                return None
             track_tags = []
             for tag in data['toptags']['tag']:
                 tag_name = tag['name'].lower()
