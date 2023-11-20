@@ -60,29 +60,6 @@ class lastfm_api:
             return {'artist_name': artist_name, 'artist_url': artist_url}
         else:
             return None
-        
-    def get_track_id(self, track_name, artist_name):
-        """Get the track id from last.fm API.
-
-        Args:
-            track_name (String): the name of the track
-            artist_name (String): the name of the artist of the track
-
-        Returns:
-            track_id(String)
-        """
-        url = f'{self.base_url}?method=track.getInfo&artist={artist_name}&track={track_name}&api_key={self.api_key}&format=json'
-        response = requests.get(url)
-
-        if response.status_code == 200:
-            try:
-                data = response.json()
-                track_id = data['track']['mbid']
-                return track_id
-            except:
-                return None
-        else:
-            return None
 
     # Return a list of info json of friends
     def get_user_friends(self, username):
@@ -739,6 +716,23 @@ class database_api:
         tag_ids = [tag['tag_id'] for tag in tags]
         return tag_ids
     
+    def get_track_info(self, track_id_list):
+        """Get track name and artist name from a list of track ids.
+
+        Args:
+            track_id_list (List): a list of track ids
+
+        Returns:
+            List: a list of dictionary in this format
+            [{"track_id", "track_name", "artist_name"}, ...]
+        """
+        query = "SELECT track_name, artist_name FROM Tracks WHERE track_id = %s"
+        self.cnx_cursor.executemany(query, track_id_list)
+        tracks = self.cnx_cursor.fetchall()
+        for idx, track in enumerate(tracks):
+            track["track_id"] = track_id_list[idx]
+        return tracks
+    
     def get_tag_id(self, tag_name_list):
         """Get tag ids from a list of tag names.
 
@@ -750,7 +744,8 @@ class database_api:
         """
         query = "SELECT tag_id FROM Tags WHERE tag_name = %s"
         self.cnx_cursor.executemany(query, tag_name_list)
-        tag_ids = self.cnx_cursor.fetchall()
+        tags = self.cnx_cursor.fetchall()
+        tag_ids = [tag['tag_id'] for tag in tags]
         return tag_ids
 
     def get_tag_dict(self):
