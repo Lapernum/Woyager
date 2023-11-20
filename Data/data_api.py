@@ -767,12 +767,12 @@ class database_api:
 
         Returns:
             A Dict of tag name and tag id
-            [{key: tag_name, value: tag_id}, ..., ...]
+            [{tag_name: tag_id}, ..., ...]
         """
         query = "SELECT tag_id, tag_name FROM Tags"
         self.cnx_cursor.execute(query)
         tags = self.cnx_cursor.fetchall()
-        tag_dict = {tag['tag_name']: tag['tag_id'] for tag in tags}
+        tag_dict = [{tag['tag_name']: tag['tag_id']} for tag in tags]
         return tag_dict
 
     def get_track_with_tags(self, tags_id_list):
@@ -783,7 +783,6 @@ class database_api:
 
         Returns:
             list: A list of track IDs that include all specified tags.
-            [{"track_id"}, ..., ...]
         """
         query = """
         SELECT track_id 
@@ -794,7 +793,7 @@ class database_api:
         """
         self.cnx_cursor.execute(query, (tuple(tags_id_list), len(tags_id_list)))
         tracks = self.cnx_cursor.fetchall()
-        track_ids = {track['track_id'] for track in tracks}
+        track_ids = [track['track_id'] for track in tracks]
         return track_ids
         
     def get_artist_from_track(self, track_id):
@@ -822,7 +821,7 @@ class database_api:
 
         Returns:
             Dict: a dict of the user's features in this format
-                {"recent_tracks", "top_tracks", "top_artists"}
+                {"top_tracks", "top_artists"}
         """
         top_tracks = self.get_top_tracks(user_id)
         top_artists = self.get_top_artist(user_id)
