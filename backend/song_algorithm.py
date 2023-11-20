@@ -2,7 +2,7 @@ import numpy as np
 import sys
 import os
 # sys.path.insert(0, "Data")
-sys.path.append(os.path.join("D:/GATECH/TreeMusicRecommendation"))
+sys.path.append(os.path.join("/Users/tonymiao/Downloads/TreeMusicRecommendation"))
 from Data.data_api import *
 from datetime import datetime
 import math
