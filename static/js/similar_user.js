@@ -18,7 +18,7 @@ window.onload = function() {
 };
 
 let nodes = [
-    { id: 'miranta8', size: 50, fx: width / 2, fy: height / 2, imageURL: 'https://lastfm.freetls.fastly.net/i/u/64s/da96584a76354358c3bc7b3fccaefb40.png' } // Start user
+    { id: 'miranta8', size: 50, fx: width / 2, fy: height / 2, imageURL: 'https://lastfm.freetls.fastly.net/i/u/64s/da96584a76354358c3bc7b3fccaefb40.png'} // Start user
 ];
 
 let linkSelection = svg.selectAll('.link');
@@ -43,15 +43,6 @@ function update() {
         .attr('class', 'node-group')
         .call(drag);
 
-    // Define a clip path
-    nodes.forEach((node, i) => {
-        svg.append('defs').append('clipPath')
-            .attr('id', 'clip-circle-' + i)
-            .append('circle')
-            .attr('r', node.size);
-    });
-
-    // Append images to each group if they don't already exist
     nodeGroups.selectAll('image')
         .data(d => [d]) // Pass the parent node data down to the children
         .join('image')
@@ -60,17 +51,23 @@ function update() {
         .attr('x', d => -d.size) // Center the image horizontally
         .attr('y', d => -d.size) // Center the image vertically
         .attr('height', d => d.size * 2) // Set the image height
-        .attr('width', d => d.size * 2) // Set the image width
+        .attr('width', d => d.size * 2); // Set the image width
 
-    // Append text to each group if it doesn't already exist
     nodeGroups.selectAll('text')
-        .data(d => [d]) // Pass the parent node data down to the children
+        .data(d => [d])
         .join('text')
         .attr('class', 'node-text')
         .text(d => d.id)
-        .attr('x', 0)  // Center the text horizontally
-        .attr('y', 3)  // Center the text vertically
-        .attr('text-anchor', 'middle');  // Center the text around (x, y)
+        .attr('x', d => -d.size / 2)
+        .attr('y', d => 4 * d.size)
+        .attr('text-anchor', 'middle')
+        .style('pointer-events', 'all') // Make sure the text element is clickable
+        .on('click', (event, d) => {
+            // Using a direct call to window.open to avoid any delays
+            window.open(`https://www.last.fm/user/${d.id}`, '_blank');
+        });
+
+    nodeGroups.style('cursor', 'pointer');
 
     // Add click event to nodeGroups
     nodeGroups.on('click', expandNode);
@@ -87,7 +84,6 @@ function update() {
     simulation.alpha(1).restart();
 }
 
-
 // Function to expand nodes
 function expandNode(event, d) {
     // Prevent the simulation from moving nodes around when adding new ones
@@ -98,13 +94,6 @@ function expandNode(event, d) {
     isFetching = true;
     document.getElementById('progress-bar').style.display = 'block';  // Show the progress bar
 
-    d3.select(this).select('circle')
-    .transition()
-    .duration(200)
-    .attr('r', d.size * 1.3)
-    .transition()
-    .duration(200)
-    .attr('r', d.size);
 
 
     const size = d.size + 5; // The size of the square
@@ -209,7 +198,8 @@ simulation.on('tick', () => {
 
     nodeGroups.select('text')
         .attr('x', d => d.x)
-        .attr('y', d => d.y + 3); // Adjust the y-offset as needed
+        .attr('y', d => d.y + d.size + 15);
+
 
     nodeGroups.select('.progress-bar')
     .attr('transform', d => `translate(${d.x}, ${d.y})`);
