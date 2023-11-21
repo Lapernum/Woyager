@@ -43,7 +43,6 @@ def calculate(username):
     df = calculate_user_distance(username, top_tracks_df, top_artists_df, top_tags_df, explored_user)
     #drop row with explored user
 
-
     json_data = df.to_json(orient='records')
 
     # append usernames in df to explored user
@@ -59,6 +58,14 @@ def index():
 def get_data(username):
     data = calculate(username)  
     return jsonify(data)
+
+@app.route('/clear_explored_users', methods=['POST']) #hard code first
+def clear_explored_users():
+    explored_user.clear()
+    explored_user.add(1) # add start user
+    return jsonify({'status': 'success'}), 200
+
+
 
 
 

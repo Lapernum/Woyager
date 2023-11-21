@@ -136,6 +136,7 @@ def calculate_user_distance(username, top_tracks_df, top_artists_df, top_tags_df
 
 def calculate_user_distance(username, top_tracks_df, top_artists_df, top_tags_df, explored_user):
     database = database_api('/Users/ziandong/TreeMusicRecommendation/Data/conf.json')
+    lastfm = lastfm_api('/Users/ziandong/TreeMusicRecommendation/Data/conf.json')
 
     top_tags_distances_df = calculate_top_tags_distance(username, top_tags_df)
     print("finish top tags")
@@ -157,9 +158,6 @@ def calculate_user_distance(username, top_tracks_df, top_artists_df, top_tags_df
     distances_df['similarity_score'] = 1 / (1 + 10 * distances_df['distance']) * 100
     print("finish calculate similarity score")
 
-    # apply normalization to map it into (10,40)
-    distances_df['similarity_score'] = distances_df['similarity_score'].apply(lambda x: 10 + 30 * (x - distances_df['similarity_score'].min()) / (distances_df['similarity_score'].max() - distances_df['similarity_score'].min()))
-    print("finish normalization")
 
 
     # sort by distance
@@ -167,12 +165,19 @@ def calculate_user_distance(username, top_tracks_df, top_artists_df, top_tags_df
     print("finish sort")
 
     # fetch the first 10 users
-    distances_df = distances_df[~distances_df['user_id'].isin(explored_user)][0:10]
+    distances_df = distances_df[~distances_df['user_id'].isin(explored_user)][0:7]
     print("finish fetch")
+
+    # apply normalization to map it into (20,50)
+    distances_df['similarity_score'] = distances_df['similarity_score'].apply(lambda x: 20 + 30 * (x - distances_df['similarity_score'].min()) / (distances_df['similarity_score'].max() - distances_df['similarity_score'].min()))
+    print("finish normalization")
 
 
     distances_df['username'] = distances_df['user_id'].apply(lambda x: database.get_user_name(x))
     print("finish get username")
+
+    distances_df['imageURL'] = distances_df['username'].apply(lambda x: lastfm.get_user_image_url(x))
+    print("finish get image url")
 
     return distances_df
 
