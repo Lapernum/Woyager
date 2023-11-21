@@ -6,9 +6,19 @@ const svg = d3.select('#visualization').append('svg')
     .attr('height', height);
 
 
+window.onload = function() {
+    fetch('/clear_explored_users', {
+        method: 'POST',
+    })
+    .then(response => response.json())
+    .then(data => console.log(data))
+    .catch((error) => {
+        console.error('Error:', error);
+    });
+};
 
 let nodes = [
-    { id: 'miranta8', size: 30, fx: width / 2, fy: height / 2  } // Start user
+    { id: 'miranta8', size: 50, fx: width / 2, fy: height / 2, imageURL: 'https://lastfm.freetls.fastly.net/i/u/64s/da96584a76354358c3bc7b3fccaefb40.png' } // Start user
 ];
 
 let linkSelection = svg.selectAll('.link');
@@ -33,12 +43,24 @@ function update() {
         .attr('class', 'node-group')
         .call(drag);
 
-    // Append circles to each group if they don't already exist
-    nodeGroups.selectAll('circle')
+    // Define a clip path
+    nodes.forEach((node, i) => {
+        svg.append('defs').append('clipPath')
+            .attr('id', 'clip-circle-' + i)
+            .append('circle')
+            .attr('r', node.size);
+    });
+
+    // Append images to each group if they don't already exist
+    nodeGroups.selectAll('image')
         .data(d => [d]) // Pass the parent node data down to the children
-        .join('circle')
+        .join('image')
         .attr('class', 'node')
-        .attr('r', d => d.size);
+        .attr('xlink:href', d => d.imageURL) // Set the image URL
+        .attr('x', d => -d.size) // Center the image horizontally
+        .attr('y', d => -d.size) // Center the image vertically
+        .attr('height', d => d.size * 2) // Set the image height
+        .attr('width', d => d.size * 2) // Set the image width
 
     // Append text to each group if it doesn't already exist
     nodeGroups.selectAll('text')
@@ -76,6 +98,46 @@ function expandNode(event, d) {
     isFetching = true;
     document.getElementById('progress-bar').style.display = 'block';  // Show the progress bar
 
+    d3.select(this).select('circle')
+    .transition()
+    .duration(200)
+    .attr('r', d.size * 1.3)
+    .transition()
+    .duration(200)
+    .attr('r', d.size);
+
+
+    const size = d.size + 5; // The size of the square
+    const squarePath = `M ${-size} ${-size} H ${size} V ${size} H ${-size} Z`; // The path for the square
+    
+    const progressBar = d3.select(this).append('path')
+        .attr('class', 'progress-bar')
+        .attr('d', squarePath) // Set the path
+        .attr('transform', `translate(${d.x}, ${d.y})`) // Position the square
+        .attr('stroke-width', 5)
+        .attr('fill', 'none')
+        .attr('stroke', 'black');
+
+    const progressBarDuration = 30000; // Initial duration for the progress bar
+
+
+    const circumference = 2 * Math.PI * progressBar.attr('r');
+    progressBar.attr('stroke-dasharray', `${circumference} ${circumference}`)
+        .attr('stroke-dashoffset', circumference);
+
+    const pathLength = progressBar.node().getTotalLength();
+    progressBar.attr('stroke-dasharray', `${pathLength} ${pathLength}`)
+        .attr('stroke-dashoffset', pathLength);
+    
+    // Animate the progress bar
+    progressBar.transition()
+        .duration(progressBarDuration)  // Duration of the fetch operation
+        .ease(d3.easeCubicOut)  // Apply an easing function to slow down progress over time
+        .attr('stroke-dashoffset', 0)
+        .on('end', () => {
+            progressBar.remove();  // Remove the progress bar when the fetch operation is done
+        });
+
     // Fetch data from the server
     fetch(`/get_data/${d.id}`)
         .then(response => response.json())
@@ -90,7 +152,7 @@ function expandNode(event, d) {
             }
             // Logic to add new nodes connected to the clicked node
             let angleIncrement = (2 * Math.PI) / 10; // Distribute nodes evenly in a circle
-            for (let i = 0; i < 10; i++) {
+            for (let i = 0; i < 7; i++) {
                 console.log(data[i]);
                 let angle = angleIncrement * i; // angle for this node
                 let newNode = {
@@ -99,6 +161,7 @@ function expandNode(event, d) {
                     // Calculate the x, y position based on angle and a fixed radius
                     x: d.x + Math.cos(angle) * 100,
                     y: d.y + Math.sin(angle) * 100,
+                    imageURL: data[i].imageURL
                 };
                 nodes.push(newNode);
                 links.push({ source: d.id, target: newNode.id });
@@ -106,7 +169,13 @@ function expandNode(event, d) {
 
             // After the fetch operation is complete, hide the progress bar and clear the flag
             document.getElementById('progress-bar').style.display = 'none';
+
+            //After the fetch operation is complete, clear the circle progress bar
+            progressBar.remove();
+
             isFetching = false;
+
+
 
             // Update the simulation with the new nodes and links
             
@@ -134,13 +203,16 @@ const drag = d3.drag()
 
 // Handle the simulation "tick" event
 simulation.on('tick', () => {
-    nodeSelection = nodeGroups.select('circle')
-        .attr('cx', d => d.x)
-        .attr('cy', d => d.y);
+    nodeSelection = nodeGroups.select('image')
+        .attr('x', d => d.x - d.size)
+        .attr('y', d => d.y - d.size);
 
     nodeGroups.select('text')
         .attr('x', d => d.x)
         .attr('y', d => d.y + 3); // Adjust the y-offset as needed
+
+    nodeGroups.select('.progress-bar')
+    .attr('transform', d => `translate(${d.x}, ${d.y})`);
 
     linkSelection.attr('x1', d => {
                      let dx = d.target.x - d.source.x;
