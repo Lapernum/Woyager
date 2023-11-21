@@ -134,30 +134,45 @@ def calculate_user_distance(username, top_tracks_df, top_artists_df, top_tags_df
 
 
 
-def calculate_user_distance(username, top_tracks_df, top_artists_df, top_tags_df):
+def calculate_user_distance(username, top_tracks_df, top_artists_df, top_tags_df, explored_user):
     database = database_api('/Users/ziandong/TreeMusicRecommendation/Data/conf.json')
-    top_tracks_distances_df = calculate_top_tracks_distance(username, top_tracks_df)
-    top_artists_distances_df = calculate_top_artists_distance(username, top_artists_df)
+
     top_tags_distances_df = calculate_top_tags_distance(username, top_tags_df)
+    print("finish top tags")
+    top_tracks_distances_df = calculate_top_tracks_distance(username, top_tracks_df)
+    print("finish top tracks")
+    top_artists_distances_df = calculate_top_artists_distance(username, top_artists_df)
+    print("finish top artists")
 
     # merge all distances
     distances_df = top_tracks_distances_df.merge(top_artists_distances_df, on='user_id')
     distances_df = distances_df.merge(top_tags_distances_df, on='user_id')
+    print("finish merge")
 
     # calculate total distance
     distances_df['distance'] = distances_df['top_tags_distance'] + distances_df['top_artists_distance'] + distances_df['top_tracks_distance']
+    print("finish calculate distance")
 
     # calculate similarity score
     distances_df['similarity_score'] = 1 / (1 + 10 * distances_df['distance']) * 100
+    print("finish calculate similarity score")
 
     # apply normalization to map it into (10,40)
     distances_df['similarity_score'] = distances_df['similarity_score'].apply(lambda x: 10 + 30 * (x - distances_df['similarity_score'].min()) / (distances_df['similarity_score'].max() - distances_df['similarity_score'].min()))
+    print("finish normalization")
 
 
     # sort by distance
     distances_df = distances_df.sort_values(by=['distance'])
+    print("finish sort")
+
+    # fetch the first 10 users
+    distances_df = distances_df[~distances_df['user_id'].isin(explored_user)][0:10]
+    print("finish fetch")
+
 
     distances_df['username'] = distances_df['user_id'].apply(lambda x: database.get_user_name(x))
+    print("finish get username")
 
     return distances_df
 

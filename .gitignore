@@ -1,6 +1,6 @@
 Data/__pycache__
 Data/conf_archive.json
 .idea/
-*.imlbackend/user/user_features/Top Tracks.csv
-
+*.iml
+backend/user/user_features/Top Tracks.csv
 .DS_Store
