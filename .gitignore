@@ -2,3 +2,5 @@ Data/__pycache__
 Data/conf_archive.json
 .idea/
 *.iml
+backend/user/user_features/Top Tracks.csv
+.DS_Store

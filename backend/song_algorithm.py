@@ -2,14 +2,16 @@ import numpy as np
 import sys
 import os
 # sys.path.insert(0, "Data")
+# TODO: change to the dir to your
 sys.path.append(os.path.join("D:/GATECH/TreeMusicRecommendation"))
 from Data.data_api import *
 from datetime import datetime
 import math
 import pdb
+# import operator
 
 class SelfListening:
-    def __init__(self, mode='tag', user='rj'):
+    def __init__(self, user='rj'):
         # print(os.path.join("Data/conf.json"))
         self.dbapi = database_api(os.path.join("Data/conf.json"))
         self.lastapi = lastfm_api(os.path.join("Data/conf.json"))
@@ -20,17 +22,18 @@ class SelfListening:
 
         # The recent tracks listened by the user, 
         # list(dict(track_name, track_url, listened_at, artist_id))
-        self.recent = self.lastapi.get_recent_tracks(user)
+        self.recent = self.lastapi.get_recent_tracks(user, page_limit=1)
 
         # The top artists of the user, list(artist_id)
-        # currently, list(dict(artist_name, count, url))
+        # currently, list(dict(artist_id, artist_name, count))
         self.top_artist = self.lastapi.get_top_artist(user)
 
+        # For target selection
+        self.target_artist = sorted(self.top_artist, key=lambda x: x['artist_listening_count'], reverse=True)
+        self.target_artist = self.target_artist[:4]
+        self.target_artist = {i['artist_name']: i['artist_listening_count'] for i in self.target_artist}
         # The added tracks that is selected by user in the process, list(track_id)
         self.added_track = list()
-
-        # Mode for the recommend step, either 'tag' or 'artist'
-        self.mode = mode
 
         # The selected tracks from select_songs()
         self.selected = list()
@@ -46,7 +49,13 @@ class SelfListening:
 
         # The top tags from top_track and recent_track, dict(tag_name: count)
         self.top_tag = {}
+        self.target_tag = {}
         self.build_top_tags()
+        # The target tags and artists for frontend: {'tags': list(tags), 'artists': list(artists)}
+        self.target = {'tag': list(self.target_tag.keys()), 'artist': list(self.target_artist.keys())}
+
+        # Mode, depedent on the selected button
+        self.mode = 'tag'
 
         
     def add_track(self, added_song):
@@ -61,18 +70,20 @@ class SelfListening:
         '''
         self.added_track.append(added_song)
 
-    def change_mode(self, mode='artist'):
+    def change_mode(self, pressed=None):
         '''
-        Changes mode according to mode variable
+        Changes mode according to selected item in self.target
 
         Input:
             - mode: either 'tag' or 'artist',
             anythin else will be considered as 'tag'
         '''
-        if mode == 'artist':
+        if pressed in self.target['artist']:
             self.mode = 'artist'
-        else:
+        elif pressed in self.target['tag']:
             self.mode = 'tag'
+        else:
+            raise KeyError("The selected item is neither an artist or a tag")
 
     def build_tag_dict(self):
         '''
@@ -84,10 +95,11 @@ class SelfListening:
         Output:
             - None: update self.top_track_tags and self.recent_track_tags dictionary
         '''
+        print('Start cache building')
         idx = 0
         for track in self.top_track:
             idx += 1
-            if idx > 20:
+            if idx > 30:
                 break
             t_name = track['track_name']
             a_name = track['artist_name']
@@ -102,13 +114,16 @@ class SelfListening:
             if a_name is not None:
                 # if not error:
                 track_tags = self.lastapi.get_track_tags(t_name, a_name)
+                if track_tags is None or len(track_tags) == 0:
+                    idx -= 1
+                    continue
                 tag_dict = {t['tag_name']: t['tag_count'] for t in track_tags}
                 self.top_track_tags.append(tag_dict)
         print("Top track tags cache built")
         idx = 0
         for track in self.recent:
             idx += 1
-            if idx > 5:
+            if idx > 20:
                 break
             t_name = track['track_name']
             a_name = track['artist_name']
@@ -120,11 +135,17 @@ class SelfListening:
             # print(t_name, a_name)
             if a_name is not None:
                 track_tags = self.lastapi.get_track_tags(t_name, a_name)
+                if track_tags is None or len(track_tags) == 0:
+                    idx -= 1
+                    continue
                 tag_dict = {t['tag_name']: t['tag_count'] for t in track_tags}
                 self.rec_track_tags.append(tag_dict)
         print("Recent track tags cache built")
-        
+        idx = 0 
         for artist in self.top_artist:
+            idx += 1
+            if idx > 20:
+                break
             artist_name = artist['artist_name']
             count = artist['artist_listening_count']
             
@@ -179,6 +200,7 @@ class SelfListening:
         print("Add rec_track_tags to top_tags")
         idx = 0
         for artist in self.top_artist:
+            idx += 1
             if idx > 20:
                 break
             # Assume {tag: count} dict structure
@@ -190,14 +212,16 @@ class SelfListening:
                 
                 if tag in self.top_tag:
                     self.top_tag[tag] += np.log(count) * cnt
-            idx += 1
+            
         print("Add top_artist_tags to top_tags")
         # pdb.set_trace()
         max_tag_cnt = max(d for d in self.top_tag.values())
         self.top_tag = sorted(self.top_tag.items(), key=lambda x: x[1], reverse=True)
         self.top_tag = dict(self.top_tag[:30])
+        self.target_tag = dict(self.top_tag[:6])
 
         self.top_tag = {tag: math.floor((count / max_tag_cnt) * 100) for tag, count in self.top_tag.items()}
+        self.target_tag = {tag: math.floor((count / max_tag_cnt) * 100) for tag, count in self.target_tag.items()}
 
     def tag_sim_score(self, tag_dict1=None, tag_dict2=None):
         '''
@@ -283,6 +307,7 @@ class SelfListening:
             - songs: A list of track_id from database
         '''
         tag_comb = list()
+        # list(tag_name)
         apperance = dict()
         for taglist in self.top_track_tags:
             if tag in taglist:
@@ -310,7 +335,10 @@ class SelfListening:
             added += 1
             if added >= 2:
                 break
+        pdb.set_trace()
         # TODO: convert tag names into tag id
+        tag_ids = self.dbapi.get_tag_id(tag_comb)
+
         # _mysql_connector.MySQLInterfaceError: Python type tuple cannot be converted
         return self.dbapi.get_track_with_tags(tag_comb)
     
@@ -338,6 +366,7 @@ class SelfListening:
 
 def main():
     user = SelfListening()
+    
     # pdb.set_trace()
     print(user.top_tag)
     print(user.select_tag_songs('Classic Rock'))
