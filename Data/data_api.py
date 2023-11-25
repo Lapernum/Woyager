@@ -7,7 +7,7 @@ import mysql.connector
 from mysql.connector import errorcode
 
 import sys
-sys.path.append('.')
+sys.path.append('..')
 
 
 from Data.utils import normalizeTag
@@ -488,7 +488,7 @@ class database_api:
 
         Args:
             tags (List): a list of tags in this format
-                [{"tag_name", "tag_url"}, ..., ...]
+                [{"tag_name"}, ..., ...]
 
         Returns:
             int: the number of new tags added to the database without duplication
@@ -500,12 +500,12 @@ class database_api:
 
         tag_list = []
         for tag in tags:
-            if tag["tag_name"] not in already_ins:
-                tag_list.append((tag["tag_name"], tag["tag_url"]))
+            if tag not in already_ins:
+                tag_list.append((tag,))
         
         newly_added_length = len(tag_list)
 
-        sql_save = "INSERT IGNORE INTO Tags (tag_name, tag_url) VALUES (%s, %s)"
+        sql_save = "INSERT IGNORE INTO Tags (tag_name) VALUES (%s)"
 
         self.cnx_cursor.executemany(sql_save, tag_list)
         self.cnx.commit()
@@ -521,7 +521,7 @@ class database_api:
         """
         tag_list = [(tag["tag_id"], track_id, tag["tag_count"]) for tag in tags]
 
-        sql_save = "INSERT IGNORE INTO Track_tag (tag_id, track_id, tag_count) VALUES (%d, %s, %d)"
+        sql_save = "INSERT IGNORE INTO Track_tag (tag_id, track_id, tag_count) VALUES (%s, %s, %s)"
 
         self.cnx_cursor.executemany(sql_save, tag_list)
         self.cnx.commit()
@@ -537,7 +537,7 @@ class database_api:
         """
         tag_list = [(tag["tag_id"], artist_id, tag["tag_count"]) for tag in tags]
 
-        sql_save = "INSERT IGNORE INTO Artist_tag (tag_id, artist_id, tag_count) VALUES (%d, %s, %d)"
+        sql_save = "INSERT IGNORE INTO Artist_tag (tag_id, artist_id, tag_count) VALUES (%s, %s, %s)"
 
         self.cnx_cursor.executemany(sql_save, tag_list)
         self.cnx.commit()
@@ -750,14 +750,12 @@ class database_api:
             List: a list of dictionary in this format
             [{"track_id", "track_name", "artist_name"}, ...]
         """
-        track_id_tuples = []
+        tracks = []
         for track_id in track_id_list:
-            track_id_tuples.append((track_id,))
-        query = "SELECT track_name, artist_name FROM Tracks WHERE track_id = %s"
-        self.cnx_cursor.executemany(query, track_id_tuples)
-        tracks = self.cnx_cursor.fetchall()
-        for idx, track in enumerate(tracks):
-            track["track_id"] = track_id_list[idx]
+            query = "SELECT track_id, track_name, artist_name FROM Tracks WHERE track_id = %s"
+            self.cnx_cursor.execute(query, (track_id,))
+            track = self.cnx_cursor.fetchone()
+            tracks.append(track)
         return tracks
     
     def get_tag_id(self, tag_name_list):
@@ -769,13 +767,12 @@ class database_api:
         Returns:
             List: a list of tag ids
         """
-        tag_name_tuples = []
+        tag_ids = []
         for tag_name in tag_name_list:
-            tag_name_tuples.append((tag_name,))
-        query = "SELECT tag_id FROM Tags WHERE tag_name = %s"
-        self.cnx_cursor.executemany(query, tag_name_tuples)
-        tags = self.cnx_cursor.fetchall()
-        tag_ids = [tag['tag_id'] for tag in tags]
+            query = "SELECT tag_id FROM Tags WHERE tag_name = %s"
+            self.cnx_cursor.execute(query, (tag_name,))
+            tag_id = self.cnx_cursor.fetchone()
+            tag_ids.append(tag_id[0])
         return tag_ids
 
     def get_tag_dict(self):
@@ -855,14 +852,25 @@ class database_api:
         Returns:
             user_name(String)
         """
-        cursor = self.cnx.cursor(dictionary=True)
         query = "SELECT user_name FROM Users WHERE user_id = %s"
-        cursor.execute(query, (user_id,))
-        result = cursor.fetchone()
+        self.cnx_cursor.execute(query, (user_id,))
+        result = self.cnx_cursor.fetchone()
         if result:
             return result['user_name']
         else:
             return None
+
+    def get_all_tracks(self):
+        query = "SELECT * FROM Tracks"
+        self.cnx_cursor.execute(query)
+        tracks = self.cnx_cursor.fetchall()
+        return tracks
+
+    def get_all_artists(self):
+        query = "SELECT * FROM Artists"
+        self.cnx_cursor.execute(query)
+        artists = self.cnx_cursor.fetchall()
+        return artists
         
     def clear_table(self, table_name):
         """Clear a table.
