@@ -59,6 +59,13 @@ class SelfListening:
 
         # Mode, depedent on the selected button
         self.mode = 'tag'
+    
+    # This will be an interactive function with front end
+    def get_target(self):
+        '''
+        This function returns self.target
+        '''
+        return self.target
 
     # This will be an interactive function with front end
     def add_track(self, added_song):
@@ -313,7 +320,7 @@ class SelfListening:
         
         # Format output
         ten_songs = [{'track_name': t[0], 'artist_name': t[1]} for t in sorted_scores[:10]]
-        scores = [t[2] for t in sorted_scores[:10]]
+        scores = [{'score': t[2]} for t in sorted_scores[:10]]
         return ten_songs, scores
 
     # Dependent with self.change_mode
