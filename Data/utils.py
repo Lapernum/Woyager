@@ -49,7 +49,8 @@ def normalizeTag(top_tags=None, artist="", track="", n=3):
     # Retrieve original tags from the top tags list
     norm_original = []
     for tag, (count, idx) in normalized.items():
-        norm_original.append((top_tags[idx][0].title(), top_tags[idx][1]))
+        if len(top_tags[idx][0].title()) <= 30:
+            norm_original.append((top_tags[idx][0].title(), top_tags[idx][1]))
     
     return norm_original[:n]
 
