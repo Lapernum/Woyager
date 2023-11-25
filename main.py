@@ -3,6 +3,7 @@ sys.path.append('.')
 
 
 from backend.user.calculation import *
+from backend.song_algorithm import SelfListening
 from flask import Flask, jsonify
 import pandas as pd
 from flask import render_template
@@ -65,8 +66,45 @@ def clear_explored_users():
     explored_user.add(1) # add start user
     return jsonify({'status': 'success'}), 200
 
+@app.route('/')
+def login():
+    return render_template('/login.html')
 
+user = None
 
+@app.route('/self_listening/<username>')
+def provide_targets(username):
+    '''
+    Function to retrieve user name from login,
+    then return the target tags and top artists for choosing
+    '''
+    global user
+    user = SelfListening(username)
+    return jsonify(user.get_target())
+
+@app.route('/self_listening/<username>/<choice>')
+def recommend_songs(username, choice):
+    '''
+    The user will select a choice from targets,
+    this function recommend 10 songs
+    '''
+    global user
+    user.change_mode(choice)
+    ten_songs, scores = user.select_ten()
+    return jsonify(ten_songs, scores)
+
+@app.route('/self_listening/<username>/add_track/<track>')
+def add_track(username, track):
+    '''
+    The user will select a song from the 10 songs,
+    this function add this selected song to the corresponding SelfListening class object
+
+    track: {'track_name', 'artist_name'}
+    '''
+    global user
+    user.add_track(track)
+    # After adding this track, a new(same) set of targets will be posted
+    return jsonify(user.get_target())
 
 
 if __name__ == '__main__':
