@@ -365,7 +365,7 @@ class database_api:
                 print(err)
             return
 
-        self.cnx_cursor = self.cnx.cursor()
+        self.cnx_cursor = self.cnx.cursor(buffered=True)
 
     def save_users(self, users):
         """Save a list of users into database without duplication.
