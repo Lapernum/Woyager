@@ -8,7 +8,10 @@ from Data.data_api import *
 from datetime import datetime
 import math
 import pdb
+import random
 # import operator
+
+random.seed(6242)
 
 class SelfListening:
     def __init__(self, user='rj'):
@@ -258,7 +261,10 @@ class SelfListening:
         Output:
             - score: a float number representing similarity
         '''
+        if len(tag_dict1) == 0 or len(tag_dict2) == 0:
+            return 0.0
         all_keys = set(tag_dict1.keys()) | set(tag_dict2.keys())
+        
         # print(all_keys)
         t1 = np.zeros(len(all_keys))
         t2 = np.zeros(len(all_keys))
@@ -267,10 +273,10 @@ class SelfListening:
                 t1[i] = tag_dict1[key]
             if key in tag_dict2:
                 t2[i] = tag_dict2[key]
-        
         prod = np.dot(t1, t2)
         norm1 = np.linalg.norm(t1)
         norm2 = np.linalg.norm(t2)
+        
         return prod / (norm1 * norm2)
 
     def song_similarity(self, track=None, artist=None):
@@ -310,14 +316,21 @@ class SelfListening:
             - scores: A list of similarity scores corresponding to the songs.
         '''
         scores = []
+        # Random sampling, prevent too much tracks
+        # pdb.set_trace()
+        if len(self.selected) > 300:
+            self.selected = random.sample(self.selected, 300)
         track_infos = self.dbapi.get_track_info(self.selected)
         for t in track_infos:
-            track, artist = t['track_name'], t['artist_name']
+            # There are certain tracks not in the database
+            if t is None:
+                continue
+            track, artist = t[1], t[2]
             if (track, artist) in self.visited:
                 continue
             scores.append((track, artist, self.song_similarity(track, artist)))
         sorted_scores = sorted(scores, key=lambda x: x[2], reverse=True)
-        
+        sorted_scores = [score for score in sorted_scores if score[2] != 0.0]
         # Format output
         ten_songs = [{'track_name': t[0], 'artist_name': t[1]} for t in sorted_scores[:10]]
         scores = [{'score': t[2]} for t in sorted_scores[:10]]
@@ -403,7 +416,8 @@ class SelfListening:
 
 def main():
     user = SelfListening()
-
+    user.change_mode('Miles+Davis') # Testing purpose
+    ten, score = user.select_ten()
     pdb.set_trace()
     print(user.top_tag)
     print(user.select_tag_songs('Classic Rock'))
