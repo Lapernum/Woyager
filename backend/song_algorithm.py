@@ -386,7 +386,7 @@ class SelfListening:
             added += 1
             if added >= 2:
                 break
-        # pdb.set_trace()
+        pdb.set_trace()
         # convert tag names into tag id
         tag_ids = self.dbapi.get_tag_id(tag_comb)
 
@@ -416,7 +416,7 @@ class SelfListening:
 
 def main():
     user = SelfListening()
-    user.change_mode('Miles+Davis') # Testing purpose
+    user.change_mode('Progressive Metal') # Testing purpose
     ten, score = user.select_ten()
     pdb.set_trace()
     print(user.top_tag)
