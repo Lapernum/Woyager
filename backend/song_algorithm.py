@@ -317,9 +317,8 @@ class SelfListening:
         '''
         scores = []
         # Random sampling, prevent too much tracks
-        # pdb.set_trace()
-        if len(self.selected) > 300:
-            self.selected = random.sample(self.selected, 300)
+        if len(self.selected) > 100:
+            self.selected = random.sample(self.selected, 100)
         track_infos = self.dbapi.get_track_info(self.selected)
         for t in track_infos:
             # There are certain tracks not in the database
@@ -358,6 +357,8 @@ class SelfListening:
             - songs: A list of track_id from database
         '''
         tag_comb = list()
+        tag_comb_1 = list()
+        tag_comb_2 = list()
         # list(tag_name)
         apperance = dict()
         for taglist in self.top_track_tags:
@@ -375,7 +376,7 @@ class SelfListening:
                         apperance[t] = c
                     else:
                         apperance[t] += c
-        # pdb.set_trace()
+        
         sort_dic = sorted(apperance.items(), key=lambda x: x[1], reverse=True)
         tag_comb.append(tag)
         added = 0
@@ -386,11 +387,21 @@ class SelfListening:
             added += 1
             if added >= 2:
                 break
-        pdb.set_trace()
+        tag_comb_1 = tag_comb[:-1]
+        tag_comb_2 = [tag_comb[0], tag_comb[-1]]
+        
         # convert tag names into tag id
         tag_ids = self.dbapi.get_tag_id(tag_comb)
-
-        return self.dbapi.get_track_with_tags(tag_comb)
+        t1 = self.dbapi.get_tag_id(tag_comb_1)
+        t2 = self.dbapi.get_tag_id(tag_comb_2)
+        
+        # Having top three tags appearing in a track in database might be difficult
+        perfect_fit = self.dbapi.get_track_with_tags(tag_ids)
+        if len(perfect_fit) > 0:
+            return perfect_fit
+        next_fit = random.sample(self.dbapi.get_track_with_tags(t1), 100) + \
+              random.sample(self.dbapi.get_track_with_tags(t2), 50)
+        return next_fit
     
     def select_artist_songs(self, artist=None):
         '''
