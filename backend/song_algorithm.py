@@ -8,7 +8,10 @@ from Data.data_api import *
 from datetime import datetime
 import math
 import pdb
+import random
 # import operator
+
+random.seed(6242)
 
 class SelfListening:
     def __init__(self, user='rj'):
@@ -310,6 +313,9 @@ class SelfListening:
             - scores: A list of similarity scores corresponding to the songs.
         '''
         scores = []
+        # Random sampling, prevent too much tracks
+        if len(track_infos) > 300:
+            track_infos = random.sample(track_infos, 300)
         track_infos = self.dbapi.get_track_info(self.selected)
         for t in track_infos:
             track, artist = t['track_name'], t['artist_name']
