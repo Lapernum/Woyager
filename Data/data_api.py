@@ -803,13 +803,15 @@ class database_api:
         query = """
         SELECT track_id 
         FROM Track_tag 
-        WHERE tag_id IN %s
+        WHERE tag_id IN ({placeholders})
         GROUP BY track_id
         HAVING COUNT(DISTINCT tag_id) = %s
-        """
-        self.cnx_cursor.execute(query, (tuple(tags_id_list), len(tags_id_list)))
+        """.format(
+            placeholders = ",".join(["%s"] * len(tags_id_list))
+        )
+        self.cnx_cursor.execute(query, tuple(tags_id_list + [len(tags_id_list)]))
         tracks = self.cnx_cursor.fetchall()
-        track_ids = [track['track_id'] for track in tracks]
+        track_ids = [track[0] for track in tracks]
         return track_ids
         
     def get_artist_from_track(self, track_id):
