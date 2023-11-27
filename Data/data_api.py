@@ -276,6 +276,8 @@ class lastfm_api:
 
         if response.status_code == 200:
             data = response.json()
+            if "error" in data:
+                return None
             artist_tags = []
             for tag in data['toptags']['tag']:
                 tag_name = tag['name'].lower()
@@ -527,17 +529,17 @@ class database_api:
         self.cnx.commit()
         return
     
-    def save_artist_tag(self, artist_id, tags):
+    def save_artist_tag(self, artist_name, tags):
         """Save a list of tags of an artist to the database.
 
         Args:
-            artist_id (String): the mbid of the artist
+            artist_name (String): the name of the artist
             tags (List): a list of tags in this format
                 [{"tag_id", "tag_count"}, ..., ...]
         """
-        tag_list = [(tag["tag_id"], artist_id, tag["tag_count"]) for tag in tags]
+        tag_list = [(tag["tag_id"], artist_name, tag["tag_count"]) for tag in tags]
 
-        sql_save = "INSERT IGNORE INTO Artist_tag (tag_id, artist_id, tag_count) VALUES (%s, %s, %s)"
+        sql_save = "INSERT IGNORE INTO Artist_tag (tag_id, artist_name, tag_count) VALUES (%s, %s, %s)"
 
         self.cnx_cursor.executemany(sql_save, tag_list)
         self.cnx.commit()
