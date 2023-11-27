@@ -394,13 +394,13 @@ class SelfListening:
         tag_ids = self.dbapi.get_tag_id(tag_comb)
         t1 = self.dbapi.get_tag_id(tag_comb_1)
         t2 = self.dbapi.get_tag_id(tag_comb_2)
-        
+
         # Having top three tags appearing in a track in database might be difficult
         perfect_fit = self.dbapi.get_track_with_tags(tag_ids)
-        if len(perfect_fit) > 0:
+        if len(perfect_fit) > 10:
             return perfect_fit
-        next_fit = random.sample(self.dbapi.get_track_with_tags(t1), 100) + \
-              random.sample(self.dbapi.get_track_with_tags(t2), 50)
+        next_fit = perfect_fit + random.sample(self.dbapi.get_track_with_tags(t1), 20) + \
+              random.sample(self.dbapi.get_track_with_tags(t2), 10)
         return next_fit
     
     def select_artist_songs(self, artist=None):
