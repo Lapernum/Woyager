@@ -10,6 +10,7 @@ from datetime import datetime
 import math
 import pdb
 import random
+from urllib.parse import quote_plus
 # import operator
 
 random.seed(6242)
@@ -134,17 +135,14 @@ class SelfListening:
                 break
             t_name = track['track_name']
             a_name = track['artist_name']
-            # Some track does not have artist mbid, even though the artist name is present
-            # if a_id == "":
-            #     self.top_track_tags.append({})
-            #     continue
-            # a_name = self.lastapi.get_artist_name(a_id)
 
-            # Some (t, a) combination does not return track tags
-            # need to return an error code
             if a_name is not None:
-                # if not error:
+                # it is reasonable not to recommend the tracks that are most listened to
+                if idx < 20:
+                    # a_name needs to be in url_plus format
+                    self.visited.append((t_name, quote_plus(a_name)))
                 track_tags = self.lastapi.get_track_tags(t_name, a_name)
+                # Some (t, a) combination does not return track tags
                 if track_tags is None or len(track_tags) == 0:
                     idx -= 1
                     continue
@@ -161,7 +159,7 @@ class SelfListening:
             
             # Some track does not have artist mbid, even though the artist name is present
             if a_name is not None:
-                self.visited.append((t_name, a_name))
+                self.visited.append((t_name, quote_plus(a_name)))
                 track_tags = self.lastapi.get_track_tags(t_name, a_name)
                 if track_tags is None or len(track_tags) == 0:
                     idx -= 1
@@ -400,7 +398,8 @@ class SelfListening:
         # Having top three tags appearing in a track in database might be difficult
         perfect_fit = self.dbapi.get_track_with_tags(tag_ids)
         pf_infos = self.dbapi.get_track_info(perfect_fit)
-
+        print('Fitting tags: ', tag_comb)
+        print('Length: ', len(pf_infos))
         # Exclude visited tracks
         pf_infos = [(t[1], t[2]) for t in pf_infos if t is not None and (t[1], t[2]) not in self.visited]
 
@@ -429,7 +428,7 @@ class SelfListening:
         # Will get 50 tracks
         top_tracks = self.lastapi.get_artist_top_tracks(artist)
         # The track id used in database API
-        songs = [(t, artist) for t in top_tracks if (t, artist) not in self.visited]
+        songs = [(t['track_name'], artist) for t in top_tracks if (t['track_name'], artist) not in self.visited]
         # songs = [artist + ': ' + t['track_name'] for t in top_tracks]
         return songs
     
@@ -441,24 +440,9 @@ class SelfListening:
 
 def main():
     user = SelfListening()
-    user.change_mode('Progressive Metal') # Testing purpose
-    ten, score = user.select_ten()
-    pdb.set_trace()
-    print(user.top_tag)
-    print(user.select_tag_songs('Classic Rock'))
-    tag1 = {1: 100, 3: 96, 5: 77, 14: 40}
-    tag2 = {1: 100, 2: 80, 3: 60, 4: 30}
-    score = user.tag_sim_score(tag1, tag2)
-    print(score)
-    tag3 = {1: 100, 2: 70, 3: 50}
-    tag4 = {1: 100, 2: 80, 3: 40}
-    tag5 = {1: 100, 3: 95, 2: 67}
-    score2 = user.tag_sim_score(tag3, tag4)
-    score3 = user.tag_sim_score(tag4, tag5)
-    print(score2)
-    print(score3)
     # Testing purpose
-    # user.lastapi.get_top_artist('rj')
+    print(user.target)
+    pdb.set_trace()
 
 if __name__ == "__main__":
     main()
