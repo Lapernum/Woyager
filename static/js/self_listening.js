@@ -171,6 +171,14 @@ function getFirstNode(username) {
                                     // Calculate the x, y position based on angle and a fixed radius
                                     x: d.x + Math.cos(angle) * 100,
                                     y: d.y + Math.sin(angle) * 100,
+                                    imageURL: fetch(`/get_artist_image/${artist[i]}`)
+                                                .then(response => response.json())
+                                                .then(data => {
+                                                    console.log(data)
+                                                })
+                                                .catch(error => {
+                                                    console.error('There was a problem with the artist image:', error);
+                                                })
                                 };
                                 nodes.push(newNode);
                                 links.push({ source: d.id, target: newNode.id });
