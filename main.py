@@ -115,7 +115,7 @@ def add_track(username, track):
 
 @app.route('/check_user/<username>')
 def check_user(username):
-    data = last_fm.get_user_friends(username)
+    data = last_fm.get_user_image_url(username)
     if data is None:
         return jsonify(False)
     else:
