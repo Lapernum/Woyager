@@ -4,3 +4,4 @@ Data/conf_archive.json
 *.iml
 backend/user/user_features/Top Tracks.csv
 .DS_Store
+node_modules/

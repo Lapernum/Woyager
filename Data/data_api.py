@@ -99,6 +99,8 @@ class lastfm_api:
 
         if response.status_code == 200:
             data = response.json()
+            if "error" in data:
+                return None
             friends = data["friends"]["user"]
             return friends
         else:
@@ -860,7 +862,7 @@ class database_api:
         self.cnx_cursor.execute(query, (user_id,))
         result = self.cnx_cursor.fetchone()
         if result:
-            return result['user_name']
+            return result[0]
         else:
             return None
 

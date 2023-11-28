@@ -4,6 +4,7 @@ sys.path.append('.')
 
 from backend.user.calculation import *
 from backend.song_algorithm import SelfListening
+from Data.data_api import *
 from flask import Flask, jsonify
 import pandas as pd
 from flask import render_template
@@ -39,6 +40,8 @@ top_tracks_df = top_tracks_df.fillna(0)
 explored_user = set()
 explored_user.add(1) #start user
 
+last_fm = lastfm_api('D:/CSE6242/TreeMusicRecommendation/Data/conf.json')
+
 
 def calculate(username):
     df = calculate_user_distance(username, top_tracks_df, top_artists_df, top_tags_df, explored_user)
@@ -53,7 +56,11 @@ def calculate(username):
 
 @app.route('/') #hard code first
 def index():
-    return render_template('/similar_users/index.html')
+    return render_template('/index.html')
+
+@app.route('/similar_user/<username>') #hard code first
+def similar_user_index(username):
+    return render_template('/similar_users/index.html', username=username)
 
 @app.route('/get_data/<username>')
 def get_data(username):
@@ -106,9 +113,22 @@ def add_track(username, track):
     # After adding this track, a new(same) set of targets will be posted
     return jsonify(user.get_target())
 
+@app.route('/check_user/<username>')
+def check_user(username):
+    data = last_fm.get_user_friends(username)
+    if data is None:
+        return jsonify(False)
+    else:
+        return jsonify(True)
+    
+@app.route('/get_user_image/<username>')
+def get_user_image(username):
+    data = last_fm.get_user_image_url(username)
+    return jsonify(data)
+
 
 if __name__ == '__main__':
-    app.run()
+    app.run(port=5500)
 
 
 
