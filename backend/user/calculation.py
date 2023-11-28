@@ -9,7 +9,7 @@ from Data.data_api import *
 from backend.user.utils import *
 from scipy.spatial import distance
 
-
+CONF_PATH = 'D:/CSE6242/TreeMusicRecommendation/Data/conf.json'
 
 def concatenate_feature_csvs(feature):
     # Get the directory of the current script
@@ -30,7 +30,7 @@ def concatenate_feature_csvs(feature):
 
 def calculate_top_tracks_distance(username, top_tracks_df):
     # get user features
-    last_fm = lastfm_api('/Users/ziandong/TreeMusicRecommendation/Data/conf.json')
+    last_fm = lastfm_api(CONF_PATH)
     user_feature = last_fm.get_user_features(username)
     user_feature['top_tracks'] = calculate_top_tracks_score(user_feature['top_tracks'])
 
@@ -58,7 +58,7 @@ def calculate_top_tracks_distance(username, top_tracks_df):
 
 def calculate_top_artists_distance(username, top_artists_df):
     # get user features
-    last_fm = lastfm_api('/Users/ziandong/TreeMusicRecommendation/Data/conf.json')
+    last_fm = lastfm_api(CONF_PATH)
     user_feature = last_fm.get_user_features(username)
     user_feature['top_artists'] = calculate_top_artists_score(user_feature['top_artists'])
 
@@ -86,7 +86,7 @@ def calculate_top_artists_distance(username, top_artists_df):
 
 def calculate_top_tags_distance(username, top_tags_df):
     # get user features
-    last_fm = lastfm_api('/Users/ziandong/TreeMusicRecommendation/Data/conf.json')
+    last_fm = lastfm_api(CONF_PATH)
     user_feature = last_fm.get_user_features(username)
     user_tags = fetch_user_tag(urls_to_text(list(user_feature['top_artists'].keys())[0:10]))
     user_tags = user_tags.split(', ')
@@ -135,8 +135,8 @@ def calculate_user_distance(username, top_tracks_df, top_artists_df, top_tags_df
 
 
 def calculate_user_distance(username, top_tracks_df, top_artists_df, top_tags_df, explored_user):
-    database = database_api('/Users/ziandong/TreeMusicRecommendation/Data/conf.json')
-    lastfm = lastfm_api('/Users/ziandong/TreeMusicRecommendation/Data/conf.json')
+    database = database_api(CONF_PATH)
+    lastfm = lastfm_api(CONF_PATH)
 
     top_tags_distances_df = calculate_top_tags_distance(username, top_tags_df)
     print("finish top tags")

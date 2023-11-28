@@ -7,7 +7,7 @@ import mysql.connector
 from mysql.connector import errorcode
 
 import sys
-sys.path.append('.')
+sys.path.append('..')
 
 
 from Data.utils import normalizeTag
@@ -82,7 +82,45 @@ class lastfm_api:
             return image_url
         else:
             return None
+        
+    
+    def get_track_image_url(self, artist, track):
+        """Get the track's album image url from last.fm API.
 
+        Args:
+            artist (String): the artist's name
+            track (String): the track's name
+        Returns:
+            String: the url of the track's image
+        """
+        url = f'{self.base_url}?method=track.getInfo&api_key={self.api_key}&artist={artist}&track={track}&format=json'
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            data = response.json()
+            image_url = data['track']['album']['image'][1]['#text']
+            return image_url
+        else:
+            return None
+        
+    def get_artist_image_url(self, artist):
+        """Get the artist's image url from last.fm API.
+
+        Args:
+            artist (String): the artist's name
+        Returns:
+            String: the url of the track's image
+        """
+        url = f'{self.base_url}?method=artist.getInfo&api_key={self.api_key}&artist={artist}&format=json'
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            data = response.json()
+            image_url = data['artist']['image'][1]['#text']
+            return image_url
+        else:
+            return None
+    
     # Return a list of info json of friends
     def get_user_friends(self, username):
         """Get a user's friends.
@@ -99,6 +137,8 @@ class lastfm_api:
 
         if response.status_code == 200:
             data = response.json()
+            if "error" in data:
+                return None
             friends = data["friends"]["user"]
             return friends
         else:
@@ -276,6 +316,8 @@ class lastfm_api:
 
         if response.status_code == 200:
             data = response.json()
+            if "error" in data:
+                return None
             artist_tags = []
             for tag in data['toptags']['tag']:
                 tag_name = tag['name'].lower()
@@ -365,7 +407,7 @@ class database_api:
                 print(err)
             return
 
-        self.cnx_cursor = self.cnx.cursor()
+        self.cnx_cursor = self.cnx.cursor(buffered=True)
 
     def save_users(self, users):
         """Save a list of users into database without duplication.
@@ -488,7 +530,7 @@ class database_api:
 
         Args:
             tags (List): a list of tags in this format
-                [{"tag_name", "tag_url"}, ..., ...]
+                [{"tag_name"}, ..., ...]
 
         Returns:
             int: the number of new tags added to the database without duplication
@@ -500,12 +542,12 @@ class database_api:
 
         tag_list = []
         for tag in tags:
-            if tag["tag_name"] not in already_ins:
-                tag_list.append((tag["tag_name"], tag["tag_url"]))
+            if tag not in already_ins:
+                tag_list.append((tag,))
         
         newly_added_length = len(tag_list)
 
-        sql_save = "INSERT IGNORE INTO Tags (tag_name, tag_url) VALUES (%s, %s)"
+        sql_save = "INSERT IGNORE INTO Tags (tag_name) VALUES (%s)"
 
         self.cnx_cursor.executemany(sql_save, tag_list)
         self.cnx.commit()
@@ -521,23 +563,23 @@ class database_api:
         """
         tag_list = [(tag["tag_id"], track_id, tag["tag_count"]) for tag in tags]
 
-        sql_save = "INSERT IGNORE INTO Track_tag (tag_id, track_id, tag_count) VALUES (%d, %s, %d)"
+        sql_save = "INSERT IGNORE INTO Track_tag (tag_id, track_id, tag_count) VALUES (%s, %s, %s)"
 
         self.cnx_cursor.executemany(sql_save, tag_list)
         self.cnx.commit()
         return
     
-    def save_artist_tag(self, artist_id, tags):
+    def save_artist_tag(self, artist_name, tags):
         """Save a list of tags of an artist to the database.
 
         Args:
-            artist_id (String): the mbid of the artist
+            artist_name (String): the name of the artist
             tags (List): a list of tags in this format
                 [{"tag_id", "tag_count"}, ..., ...]
         """
-        tag_list = [(tag["tag_id"], artist_id, tag["tag_count"]) for tag in tags]
+        tag_list = [(tag["tag_id"], artist_name, tag["tag_count"]) for tag in tags]
 
-        sql_save = "INSERT IGNORE INTO Artist_tag (tag_id, artist_id, tag_count) VALUES (%d, %s, %d)"
+        sql_save = "INSERT IGNORE INTO Artist_tag (tag_id, artist_name, tag_count) VALUES (%s, %s, %s)"
 
         self.cnx_cursor.executemany(sql_save, tag_list)
         self.cnx.commit()
@@ -750,14 +792,12 @@ class database_api:
             List: a list of dictionary in this format
             [{"track_id", "track_name", "artist_name"}, ...]
         """
-        track_id_tuples = []
+        tracks = []
         for track_id in track_id_list:
-            track_id_tuples.append((track_id,))
-        query = "SELECT track_name, artist_name FROM Tracks WHERE track_id = %s"
-        self.cnx_cursor.executemany(query, track_id_tuples)
-        tracks = self.cnx_cursor.fetchall()
-        for idx, track in enumerate(tracks):
-            track["track_id"] = track_id_list[idx]
+            query = "SELECT track_id, track_name, artist_name FROM Tracks WHERE track_id = %s"
+            self.cnx_cursor.execute(query, (track_id,))
+            track = self.cnx_cursor.fetchone()
+            tracks.append(track)
         return tracks
     
     def get_tag_id(self, tag_name_list):
@@ -769,13 +809,12 @@ class database_api:
         Returns:
             List: a list of tag ids
         """
-        tag_name_tuples = []
+        tag_ids = []
         for tag_name in tag_name_list:
-            tag_name_tuples.append((tag_name,))
-        query = "SELECT tag_id FROM Tags WHERE tag_name = %s"
-        self.cnx_cursor.executemany(query, tag_name_tuples)
-        tags = self.cnx_cursor.fetchall()
-        tag_ids = [tag['tag_id'] for tag in tags]
+            query = "SELECT tag_id FROM Tags WHERE tag_name = %s"
+            self.cnx_cursor.execute(query, (tag_name,))
+            tag_id = self.cnx_cursor.fetchone()
+            tag_ids.append(tag_id[0])
         return tag_ids
 
     def get_tag_dict(self):
@@ -806,13 +845,15 @@ class database_api:
         query = """
         SELECT track_id 
         FROM Track_tag 
-        WHERE tag_id IN %s
+        WHERE tag_id IN ({placeholders})
         GROUP BY track_id
         HAVING COUNT(DISTINCT tag_id) = %s
-        """
-        self.cnx_cursor.execute(query, (tuple(tags_id_list), len(tags_id_list)))
+        """.format(
+            placeholders = ",".join(["%s"] * len(tags_id_list))
+        )
+        self.cnx_cursor.execute(query, tuple(tags_id_list + [len(tags_id_list)]))
         tracks = self.cnx_cursor.fetchall()
-        track_ids = [track['track_id'] for track in tracks]
+        track_ids = [track[0] for track in tracks]
         return track_ids
         
     def get_artist_from_track(self, track_id):
@@ -855,14 +896,25 @@ class database_api:
         Returns:
             user_name(String)
         """
-        cursor = self.cnx.cursor(dictionary=True)
         query = "SELECT user_name FROM Users WHERE user_id = %s"
-        cursor.execute(query, (user_id,))
-        result = cursor.fetchone()
+        self.cnx_cursor.execute(query, (user_id,))
+        result = self.cnx_cursor.fetchone()
         if result:
-            return result['user_name']
+            return result[0]
         else:
             return None
+
+    def get_all_tracks(self):
+        query = "SELECT * FROM Tracks"
+        self.cnx_cursor.execute(query)
+        tracks = self.cnx_cursor.fetchall()
+        return tracks
+
+    def get_all_artists(self):
+        query = "SELECT * FROM Artists"
+        self.cnx_cursor.execute(query)
+        artists = self.cnx_cursor.fetchall()
+        return artists
         
     def clear_table(self, table_name):
         """Clear a table.

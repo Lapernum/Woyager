@@ -3,12 +3,17 @@ import sys
 import os
 # sys.path.insert(0, "Data")
 # TODO: change to the dir to your
-sys.path.append(os.path.join("D:/GATECH/TreeMusicRecommendation"))
+# sys.path.append(os.path.join("D:/GATECH/TreeMusicRecommendation"))
+sys.path.append(".")
 from Data.data_api import *
 from datetime import datetime
 import math
 import pdb
+import random
+from urllib.parse import quote_plus
 # import operator
+
+random.seed(6242)
 
 class SelfListening:
     def __init__(self, user='rj'):
@@ -23,7 +28,10 @@ class SelfListening:
         # The recent tracks listened by the user, 
         # list(dict(track_name, track_url, listened_at, artist_id))
         self.recent = self.lastapi.get_recent_tracks(user, page_limit=1)
-
+        
+        # A list that records tuple(track_name, artist_name). 
+        # This records the track recently listened by the user and the tracks added by the user
+        self.visited = list()
         # The top artists of the user, list(artist_id)
         # currently, list(dict(artist_id, artist_name, count))
         self.top_artist = self.lastapi.get_top_artist(user)
@@ -34,12 +42,12 @@ class SelfListening:
         self.target_artist = {i['artist_name']: i['artist_listening_count'] for i in self.target_artist}
         # The added tracks that is selected by user in the process, list(track_id)
         self.added_track = list()
-
+        self.added_track_tag = {}
         # The selected tracks from select_songs()
         self.selected = list()
         # The similarity between a track and the group of tracks listened previously by user.
         # As a dict {track: score}
-        self.similarity = {}
+        # self.similarity = {}
 
         # Build two track tags cache dictionary
         self.top_track_tags = list()
@@ -56,20 +64,42 @@ class SelfListening:
 
         # Mode, depedent on the selected button
         self.mode = 'tag'
+    
+    # This will be an interactive function with front end
+    def get_target(self):
+        '''
+        This function returns self.target
+        '''
+        return self.target
 
-        
+    # This will be an interactive function with front end
     def add_track(self, added_song):
         '''
         This function appends the added song selected in "Self-listening Mode" to added_track
+        Along with the addition, this will also update self.visited and self.added_track_tag
 
         Input:
-            - added_song: the track_id of the added song
+            - added_song: the {'track_name', 'artist_name'} dictionary of the added song
         
         Output:
             - None
         '''
         self.added_track.append(added_song)
+        self.visited.append((added_song['track_name'], added_song['artist_name']))
+        # Update self.added_track_tag for 'recurrent' idea
+        track_tags = self.lastapi.get_track_tags(added_song['track_name'], added_song['artist_name'])
+        if track_tags is not None:
+            tag_dict = {t['tag_name']: t['tag_count'] for t in track_tags}
+            for t, c in tag_dict.items():
+                if t in self.added_track_tag:
+                    self.added_track_tag[t] += c
+                else:
+                    self.added_track_tag[t] = c
+        max_tag_cnt = max(d for d in self.added_track_tag.values())
 
+        self.added_track_tag = {tag: math.floor((count / max_tag_cnt) * 100) for tag, count in self.added_track_tag.items()}
+
+    # This will be an interactive function with front end
     def change_mode(self, pressed=None):
         '''
         Changes mode according to selected item in self.target
@@ -80,8 +110,10 @@ class SelfListening:
         '''
         if pressed in self.target['artist']:
             self.mode = 'artist'
+            self.select_songs(pressed)
         elif pressed in self.target['tag']:
             self.mode = 'tag'
+            self.select_songs(pressed)
         else:
             raise KeyError("The selected item is neither an artist or a tag")
 
@@ -99,21 +131,18 @@ class SelfListening:
         idx = 0
         for track in self.top_track:
             idx += 1
-            if idx > 30:
+            if idx > 50:
                 break
             t_name = track['track_name']
             a_name = track['artist_name']
-            # Some track does not have artist mbid, even though the artist name is present
-            # if a_id == "":
-            #     self.top_track_tags.append({})
-            #     continue
-            # a_name = self.lastapi.get_artist_name(a_id)
 
-            # Some (t, a) combination does not return track tags
-            # need to return an error code
             if a_name is not None:
-                # if not error:
+                # it is reasonable not to recommend the tracks that are most listened to
+                if idx < 20:
+                    # a_name needs to be in url_plus format
+                    self.visited.append((t_name, quote_plus(a_name)))
                 track_tags = self.lastapi.get_track_tags(t_name, a_name)
+                # Some (t, a) combination does not return track tags
                 if track_tags is None or len(track_tags) == 0:
                     idx -= 1
                     continue
@@ -127,13 +156,10 @@ class SelfListening:
                 break
             t_name = track['track_name']
             a_name = track['artist_name']
+            
             # Some track does not have artist mbid, even though the artist name is present
-            # if a_id == "":
-            #     self.top_track_tags.append({})
-            #     continue
-            # a_name = self.lastapi.get_artist_name(a_id)
-            # print(t_name, a_name)
             if a_name is not None:
+                self.visited.append((t_name, quote_plus(a_name)))
                 track_tags = self.lastapi.get_track_tags(t_name, a_name)
                 if track_tags is None or len(track_tags) == 0:
                     idx -= 1
@@ -172,7 +198,7 @@ class SelfListening:
             - None: update self.top_tag dict
         '''
         for i in range(len(self.top_track_tags)):
-            if i > 20:
+            if i > 50:
                 break
             listened_count = self.top_track[i]['track_listening_count']
             tags = self.top_track_tags[i]
@@ -216,9 +242,9 @@ class SelfListening:
         print("Add top_artist_tags to top_tags")
         # pdb.set_trace()
         max_tag_cnt = max(d for d in self.top_tag.values())
-        self.top_tag = sorted(self.top_tag.items(), key=lambda x: x[1], reverse=True)
-        self.top_tag = dict(self.top_tag[:30])
-        self.target_tag = dict(self.top_tag[:6])
+        temp = sorted(self.top_tag.items(), key=lambda x: x[1], reverse=True)
+        self.top_tag = dict(temp[:30])
+        self.target_tag = dict(temp[:8])
 
         self.top_tag = {tag: math.floor((count / max_tag_cnt) * 100) for tag, count in self.top_tag.items()}
         self.target_tag = {tag: math.floor((count / max_tag_cnt) * 100) for tag, count in self.target_tag.items()}
@@ -228,13 +254,16 @@ class SelfListening:
         This function calculates the similarity score between two dictionary of tags.
         
         Input:
-            - tag_dict1: a (tag, count) pair dictionary
-            - tag_dict2: a (tag, count) pair dictionary
+            - tag_dict1: a {tag: count} pair dictionary
+            - tag_dict2: a {tag: count} pair dictionary
 
         Output:
             - score: a float number representing similarity
         '''
+        if len(tag_dict1) == 0 or len(tag_dict2) == 0:
+            return 0.0
         all_keys = set(tag_dict1.keys()) | set(tag_dict2.keys())
+        
         # print(all_keys)
         t1 = np.zeros(len(all_keys))
         t2 = np.zeros(len(all_keys))
@@ -243,35 +272,36 @@ class SelfListening:
                 t1[i] = tag_dict1[key]
             if key in tag_dict2:
                 t2[i] = tag_dict2[key]
-        
         prod = np.dot(t1, t2)
         norm1 = np.linalg.norm(t1)
         norm2 = np.linalg.norm(t2)
+        
         return prod / (norm1 * norm2)
 
-    def song_similarity(self, song1=None, song2=None):
+    def song_similarity(self, track=None, artist=None):
         '''
-        Given information on 2 songs, return a similarity score between the two songs
-            1. Extract the tags of the two songs from database;
-            2. Extract the top tags of the two artists from database;
-            3. Calculate both similarities and sum up to score.
+        Given information on 1 song, return a similarity score 
+        between the song and the user's listening history
+            1. Extract the tags of the song from last.fm api;
+            2. Calculate the score between the song and user's history
+            3. Calculate the score between the song and user's previous selections
         Input:
-            - song1: track id of the first song
-            - song2: track id of the second song
+            - song: track id of the first song
 
         Output:
-            - score: a float number representing similarity between two songs
+            - score: a float number representing similarity between
         '''
-        tags_song1 = self.dbapi.GetTrackTopTags(song1)
-        tags_song2 = self.dbapi.GetTrackTopTags(song2)
-        artist1 = self.dbapi.GetArtistFromSong(song1)
-        artist2 = self.dbapi.GetArtistFromSong(song2)
-        tags_artist1 = self.dbapi.GetArtistTopTags(artist1)
-        tags_artist2 = self.dbapi.GetArtistTopTags(artist2)
-
-        score = self.tag_sim_score(tags_song1, tags_song2) * 0.7 + self.tag_sim_score(tags_artist1, tags_artist2) * 0.3
-        return score
-    
+        if track is None or artist is None:
+            return 0
+        track_tags = self.lastapi.get_track_tags(track, artist)
+        if track_tags is None:
+            return 0
+        track_tags = {t['tag_name']: t['tag_count'] for t in track_tags}
+        weight = len(self.added_track) * 0.05
+        return self.tag_sim_score(track_tags, self.top_tag) * (1 - weight) \
+              + self.tag_sim_score(track_tags, self.added_track_tag) * len(self.added_track_tag) * weight
+        
+    # This will be an interactive function with front end
     def select_ten(self):
         '''
         With the selected tracks, select the top ten with the highest similarity score.
@@ -281,11 +311,31 @@ class SelfListening:
             - None, just use self.selected()
         
         Output:
-            - ten_songs: A list of track_id from database, with length at most 10.
-            - score: A list of similarity scores corresponding to the songs.
+            - ten_songs: A list of {'track_name': 't1', 'artist_name': 'a1'} from database, with length at most 10.
+            - scores: A list of similarity scores corresponding to the songs.
         '''
-        raise NotImplementedError
+        scores = []
+        # Random sampling, prevent too much tracks
+        if len(self.selected) > 100:
+            self.selected = random.sample(self.selected, 100)
+        
+        for t in self.selected:
+            # There are certain tracks not in the database
+            if t is None:
+                continue
+            track, artist = t[0], t[1]
+            
+            if (track, artist) in self.visited:
+                continue
+            scores.append((track, artist, self.song_similarity(track, artist)))
+        sorted_scores = sorted(scores, key=lambda x: x[2], reverse=True)
+        sorted_scores = [score for score in sorted_scores if score[2] != 0.0]
+        # Format output
+        ten_songs = [{'track_name': s[0], 'artist_name': s[1]} for s in sorted_scores[:10]]
+        scores = [{'score': s[2]} for s in sorted_scores[:10]]
+        return ten_songs, scores
 
+    # Dependent with self.change_mode
     def select_songs(self, arg=None):
         '''
         Select ~ tracks according to the current mode.
@@ -304,9 +354,11 @@ class SelfListening:
         Input:
             - tag: The target tag selected by the user
         Output:
-            - songs: A list of track_id from database
+            - songs: A list of (track, artist) from database
         '''
         tag_comb = list()
+        tag_comb_1 = list()
+        tag_comb_2 = list()
         # list(tag_name)
         apperance = dict()
         for taglist in self.top_track_tags:
@@ -324,7 +376,7 @@ class SelfListening:
                         apperance[t] = c
                     else:
                         apperance[t] += c
-        # pdb.set_trace()
+        
         sort_dic = sorted(apperance.items(), key=lambda x: x[1], reverse=True)
         tag_comb.append(tag)
         added = 0
@@ -335,12 +387,33 @@ class SelfListening:
             added += 1
             if added >= 2:
                 break
-        pdb.set_trace()
-        # TODO: convert tag names into tag id
+        tag_comb_1 = tag_comb[:-1]
+        tag_comb_2 = [tag_comb[0], tag_comb[-1]]
+        
+        # convert tag names into tag id
         tag_ids = self.dbapi.get_tag_id(tag_comb)
+        t1 = self.dbapi.get_tag_id(tag_comb_1)
+        t2 = self.dbapi.get_tag_id(tag_comb_2)
 
-        # _mysql_connector.MySQLInterfaceError: Python type tuple cannot be converted
-        return self.dbapi.get_track_with_tags(tag_comb)
+        # Having top three tags appearing in a track in database might be difficult
+        perfect_fit = self.dbapi.get_track_with_tags(tag_ids)
+        pf_infos = self.dbapi.get_track_info(perfect_fit)
+        print('Fitting tags: ', tag_comb)
+        print('Length: ', len(pf_infos))
+        # Exclude visited tracks
+        pf_infos = [(t[1], t[2]) for t in pf_infos if t is not None and (t[1], t[2]) not in self.visited]
+
+        if len(pf_infos) > 10:
+            return pf_infos
+        
+        next_fit = random.sample(self.dbapi.get_track_with_tags(t1), 30) + \
+              random.sample(self.dbapi.get_track_with_tags(t2), 15)
+        nf_infos = self.dbapi.get_track_info(next_fit)
+        
+        # Exclude visited tracks
+        nf_infos = [(t[1], t[2]) for t in nf_infos if t is not None and (t[1], t[2]) not in self.visited]
+
+        return pf_infos + nf_infos
     
     def select_artist_songs(self, artist=None):
         '''
@@ -350,12 +423,13 @@ class SelfListening:
             - artist: The target artist selected by the user
         
         Output:
-            - songs: A list of track_id from database API
+            - songs: A list of (track, artist) from database API
         '''
-        
+        # Will get 50 tracks
         top_tracks = self.lastapi.get_artist_top_tracks(artist)
         # The track id used in database API
-        songs = [artist + ': ' + t['track_name'] for t in top_tracks]
+        songs = [(t['track_name'], artist) for t in top_tracks if (t['track_name'], artist) not in self.visited]
+        # songs = [artist + ': ' + t['track_name'] for t in top_tracks]
         return songs
     
     def close_server(self):
@@ -366,23 +440,9 @@ class SelfListening:
 
 def main():
     user = SelfListening()
-    
-    # pdb.set_trace()
-    print(user.top_tag)
-    print(user.select_tag_songs('Classic Rock'))
-    tag1 = {1: 100, 3: 96, 5: 77, 14: 40}
-    tag2 = {1: 100, 2: 80, 3: 60, 4: 30}
-    score = user.tag_sim_score(tag1, tag2)
-    print(score)
-    tag3 = {1: 100, 2: 70, 3: 50}
-    tag4 = {1: 100, 2: 80, 3: 40}
-    tag5 = {1: 100, 3: 95, 2: 67}
-    score2 = user.tag_sim_score(tag3, tag4)
-    score3 = user.tag_sim_score(tag4, tag5)
-    print(score2)
-    print(score3)
     # Testing purpose
-    # user.lastapi.get_top_artist('rj')
+    print(user.target)
+    pdb.set_trace()
 
 if __name__ == "__main__":
     main()
