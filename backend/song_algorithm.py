@@ -3,7 +3,8 @@ import sys
 import os
 # sys.path.insert(0, "Data")
 # TODO: change to the dir to your
-sys.path.append(os.path.join("D:/GATECH/TreeMusicRecommendation"))
+# sys.path.append(os.path.join("D:/GATECH/TreeMusicRecommendation"))
+sys.path.append(".")
 from Data.data_api import *
 from datetime import datetime
 import math
