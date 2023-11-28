@@ -887,6 +887,24 @@ class database_api:
         top_artists = self.get_top_artist(user_id)
         return {"top_tracks": top_tracks, "top_artists": top_artists}
     
+    def get_user_id(self, username):
+        """Get the user id from Users table.
+
+        Args:
+            username (String): the username of the user
+
+        Returns:
+            user_id(int)
+        """
+        query = "SELECT user_id FROM Users WHERE user_name = %s"
+        self.cnx_cursor.execute(query, (username,))
+        result = self.cnx_cursor.fetchone()
+        if result:
+            return result[0]
+        else:
+            return None
+
+
     def get_user_name(self, user_id):
         """Get the user name from Users table.
 
