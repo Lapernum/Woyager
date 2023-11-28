@@ -136,6 +136,11 @@ def get_track_image(artist, track):
     data = last_fm.get_track_image_url(artist, track)
     return jsonify(data)
 
+@app.route('/get_artist_image/<artist>')
+def get_artist_image(artist):
+    data = last_fm.get_artist_image_url(artist)
+    return jsonify(data)
+
 if __name__ == '__main__':
     app.run(port=5500)
 
