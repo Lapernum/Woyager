@@ -102,6 +102,25 @@ class lastfm_api:
             return image_url
         else:
             return None
+        
+    def get_artist_image_url(self, artist):
+        """Get the artist's image url from last.fm API.
+
+        Args:
+            artist (String): the artist's name
+        Returns:
+            String: the url of the track's image
+        """
+        url = f'{self.base_url}?method=artist.getInfo&api_key={self.api_key}&artist={artist}&format=json'
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            data = response.json()
+            image_url = data['artist']['image'][1]['#text']
+            return image_url
+        else:
+            return None
+    
     # Return a list of info json of friends
     def get_user_friends(self, username):
         """Get a user's friends.
