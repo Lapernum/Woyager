@@ -5,7 +5,21 @@
     <meta charset="UTF-8">
     <title>D3 Visualization</title>
     <script src="https://d3js.org/d3.v6.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/static/js/login.js"></script>
+    {% comment %} <script src="/static/js/similar_user.js"></script> {% endcomment %}
+    <link href="../static/css/output.css" rel="stylesheet">
     <style>
+        @tailwind base;
+        @tailwind components;
+        @tailwind utilities;
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@100;300;400;500;700;900&family=Outfit:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
+        body {
+            font-family: 'Outfit', sans-serif;
+        }
+
         /* Existing styles */
         .node {
             fill: #ccc;
@@ -26,9 +40,15 @@
         }
     </style>
 </head>
-<body>
-    <div id="visualization"></div>
-    <script src="/static/js/similar_user.js"></script>
+<body style="display: flex; align-items:center; justify-content: center; min-height: 100vh;">
+    <div id="login-panel" style="height:max-content;">
+        <p class="text-6xl mb-8 font-bold">Create Your Own Music Dream.</p>
+        <p class="text-lg mb-2">Please input your last.fm username</p>
+        <div id="username-input">
+            <input type="text" placeholder="Who are you?" class="input input-bordered input-accent w-full max-w-xs border-[#335778]" id="username_input" />
+            <button class="btn btn-accent border-[#335778] bg-[#335778] text-[white] ml-1" onclick="startLogin()">Start Journey</button>
+        </div>
+    </div>
 </body>
 </html>
 <!-- Login Page -->
