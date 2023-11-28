@@ -8,7 +8,8 @@ from Data.data_api import *
 from flask import Flask, jsonify
 import pandas as pd
 from flask import render_template
-
+from urllib.parse import unquote
+import copy
 
 
 app = Flask(__name__)
@@ -83,7 +84,7 @@ def clear_explored_users():
 #     return render_template('/login.html')
 
 user = None
-
+primary_target = {}
 @app.route('/self_listening/<username>') 
 def self_listening_index(username):
     return render_template('/self_listening/index.html', username=username)
@@ -95,12 +96,14 @@ def provide_targets(username):
     then return the target tags and top artists for choosing
     '''
     global user
+    global primary_target
     user = SelfListening(username)
     targets = user.get_target()
+    primary_target = targets
     return targets
 
-@app.route('/self_listening/<username>/<choice>')
-def recommend_songs(username, choice):
+@app.route('/self_listening/targets/<choice>')
+def recommend_songs(choice):
     '''
     The user will select a choice from targets,
     this function recommend 10 songs
@@ -110,8 +113,8 @@ def recommend_songs(username, choice):
     ten_songs, scores = user.select_ten()
     return {"ten_songs": ten_songs, "scores": scores}
 
-@app.route('/self_listening/<username>/add_track/<track>')
-def add_track(username, track):
+@app.route('/self_listening/add_track/<track>/<artist>')
+def add_track(track, artist):
     '''
     The user will select a song from the 10 songs,
     this function add this selected song to the corresponding SelfListening class object
@@ -119,8 +122,13 @@ def add_track(username, track):
     track: {'track_name', 'artist_name'}
     '''
     global user
-    user.add_track(track)
-    targets = user.get_target()
+    nt = {'track_name': unquote(track), 'artist_name': artist}
+    print(nt)
+    user.add_track(nt)
+    targets = copy.deepcopy(user.get_target())
+    print(user.added_track_tag)
+    user.update_target(primary_target)
+    print(targets)
     # After adding this track, a new(same) set of targets will be posted
     return targets
 

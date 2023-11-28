@@ -98,8 +98,11 @@ class lastfm_api:
 
         if response.status_code == 200:
             data = response.json()
-            image_url = data['track']['album']['image'][1]['#text']
-            return image_url
+            if 'album' in data['track']:
+                image_url = data['track']['album']['image'][1]['#text']
+                return image_url
+            else:
+                return None
         else:
             return None
         
