@@ -24,10 +24,54 @@
             font-size: 10px;
             pointer-events: none; /* Prevent text from interfering with click events */
         }
+
+
+        #progress-bar {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(to right, #3f87a6, #ebf8e1, #f69d3c);
+            background-size: 200% auto;
+            animation: progress-bar 2s linear infinite;
+        }
+
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #fff;
+            opacity: 1;
+            transition: opacity 2s;
+            z-index: 9999;
+        }
+
+        #loading-overlay.hide {
+            opacity: 0;
+        }
+
+
+
+        @keyframes progress-bar {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+
+
     </style>
 </head>
 <body>
+
+    <div id="loading-overlay"></div>
+
     <div id="visualization"></div>
+    <div id="progress-bar"></div>
+
     <script src="/static/js/similar_user.js"></script>
 </body>
 </html>
