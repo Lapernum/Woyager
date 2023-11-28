@@ -32,6 +32,7 @@
             pointer-events: none; /* Prevent text from interfering with click events */
         }
 
+
         #progress-bar {
             display: none;
             position: fixed;
@@ -46,17 +47,20 @@
 
 
 
+
         @keyframes progress-bar {
             0% { background-position: 200% 0; }
             100% { background-position: -200% 0; }
         }
-        
-        
+
 
 
     </style>
 </head>
 <body>
+
+    <div id="loading-overlay"></div>
+
     <div id="visualization"></div>
     <div id="progress-bar"></div>
 

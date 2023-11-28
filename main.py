@@ -15,6 +15,7 @@ import copy
 app = Flask(__name__)
 
 last_fm = lastfm_api('./Data/conf.json')
+database = database_api('./Data/conf.json')
 
 top_tags_df = concatenate_feature_csvs("Top Tags")
 top_tags_df = top_tags_df.fillna(0)
@@ -37,22 +38,24 @@ top_tracks_df = top_tracks_df.fillna(0)
 
 
 
-
 explored_user = set()
-explored_user.add(1) #start user
-
+user_id = None
 
 
 def calculate(username):
-    df = calculate_user_distance(username, top_tracks_df, top_artists_df, top_tags_df, explored_user)
-    #drop row with explored user
+    try:
+        print(explored_user)               
+        df = calculate_user_distance(username, top_tracks_df, top_artists_df, top_tags_df, explored_user)
+        #drop row with explored user
 
-    json_data = df.to_json(orient='records')
+        json_data = df.to_json(orient='records')
 
-    # append usernames in df to explored user
-    explored_user.update(df['user_id'].tolist())
+        # append usernames in df to explored user
+        explored_user.update(df['user_id'].tolist())
     
-    return json_data
+        return json_data
+    except:
+        return None
 
 @app.route('/') #hard code first
 def index():
@@ -60,17 +63,20 @@ def index():
 
 @app.route('/similar_user/<username>') #hard code first
 def similar_user_index(username):
-    return render_template('/similar_users/index.html', username=username)
+    return render_template('/similar_users/index.html')
 
 @app.route('/get_data/<username>')
 def get_data(username):
+
     data = calculate(username)  
     return jsonify(data)
 
 @app.route('/clear_explored_users', methods=['POST']) #hard code first
 def clear_explored_users():
+    global user_id
     explored_user.clear()
-    explored_user.add(1) # add start user
+    if user_id is not None:
+        explored_user.add(user_id)
     return jsonify({'status': 'success'}), 200
 
 # @app.route('/login')
@@ -128,7 +134,12 @@ def add_track(track, artist):
 
 @app.route('/check_user/<username>')
 def check_user(username):
+    global user_id
     data = last_fm.get_user_image_url(username)
+    user_id = database.get_user_id(username)
+    if user_id is not None:
+        explored_user.add(user_id)
+        
     if data is None:
         return jsonify(False)
     else:
@@ -150,7 +161,7 @@ def get_artist_image(artist):
     return jsonify(data)
 
 if __name__ == '__main__':
-    app.run(port=5500)
+    app.run(debug=True)
 
 
 

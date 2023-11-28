@@ -79,6 +79,7 @@ function getFirstNode(username) {
                     .on('click', (event, d) => {
                         // Using a direct call to window.open to avoid any delays
                         window.open(`https://www.last.fm/user/${d.id}`, '_blank');
+                        event.stopPropagation(); // Stop the click event from bubbling up to the parent node group
                     });
 
                 nodeGroups.style('cursor', 'pointer');
@@ -108,6 +109,7 @@ function getFirstNode(username) {
                 isFetching = true;
                 document.getElementById('progress-bar').style.display = 'block';  // Show the progress bar
 
+                d3.select(this).select('.error-text').remove();
 
 
                 const size = d.size + 5; // The size of the square
@@ -153,6 +155,28 @@ function getFirstNode(username) {
                                 return;
                             }
                         }
+                        // Check if data is empty
+                        if (data === null || data.length === 0) {
+                            console.log('No data returned from server');
+                            // Display a message to the user
+                            d3.select(this).append('text')
+                            .attr('class', 'error-text')
+                            .text('Expansion progress failed due to insufficient data.')
+                            .attr('x', d => d.x)
+                            .attr('y', d => d.y + d.size + 50) // Position the text below the node
+                            .attr('text-anchor', 'middle')
+                            .style('font-family', "'Outfit', sans-serif")
+                            .style('font-size', '1rem')
+                            .style('fill', 'red'); // Make the text red to indicate an error
+                            // eliminate the progress bar
+                            progressBar.remove();
+                            isFetching = false;
+                            document.getElementById('progress-bar').style.display = 'none';
+
+            
+                            return;
+                        }        
+
                         // Logic to add new nodes connected to the clicked node
                         let angleIncrement = (2 * Math.PI) / 10; // Distribute nodes evenly in a circle
                         for (let i = 0; i < 7; i++) {
@@ -250,4 +274,3 @@ function getFirstNode(username) {
 
 url_elements = window.location.href.split("/");
 getFirstNode(url_elements[url_elements.length - 1]);
-
