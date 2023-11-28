@@ -66,9 +66,9 @@ def clear_explored_users():
     explored_user.add(1) # add start user
     return jsonify({'status': 'success'}), 200
 
-@app.route('/')
-def login():
-    return render_template('/login.html')
+# @app.route('/login')
+# def login():
+#     return render_template('/login.html')
 
 user = None
 
