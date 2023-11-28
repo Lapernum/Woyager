@@ -10,7 +10,7 @@ from datetime import datetime
 import math
 import pdb
 import random
-from urllib.parse import quote_plus
+from urllib.parse import quote_plus, unquote_plus
 # import operator
 
 random.seed(6242)
@@ -39,7 +39,7 @@ class SelfListening:
         # For target selection
         self.target_artist = sorted(self.top_artist, key=lambda x: x['artist_listening_count'], reverse=True)
         self.target_artist = self.target_artist[:4]
-        self.target_artist = {i['artist_name']: i['artist_listening_count'] for i in self.target_artist}
+        self.target_artist = {unquote_plus(i['artist_name']): i['artist_listening_count'] for i in self.target_artist}
         # The added tracks that is selected by user in the process, list(track_id)
         self.added_track = list()
         self.added_track_tag = {}
@@ -98,6 +98,27 @@ class SelfListening:
         max_tag_cnt = max(d for d in self.added_track_tag.values())
 
         self.added_track_tag = {tag: math.floor((count / max_tag_cnt) * 100) for tag, count in self.added_track_tag.items()}
+        self.target = {'tag': list(self.added_track_tag.keys()), 'artist': list(s['artist_name'] for s in self.added_track)}
+    
+    def update_target(self, prime):
+        '''
+        Add the original targets tags back to the target, ignoring duplicates
+        Input: 
+            - prime: {'tag': list(tag), 'artist': list(artist)}
+        '''
+        # Update tags
+        existing_tags_set = set(self.target['tag'])
+        new_tags_set = set(prime['tag'])
+        unique_tags = list(existing_tags_set.union(new_tags_set))
+        self.target['tag'] = unique_tags
+
+        # Update artists
+        existing_artists_set = set(self.target['artist'])
+        new_artists_set = set(prime['artist'])
+        unique_artists = list(existing_artists_set.union(new_artists_set))
+        self.target['artist'] = unique_artists
+
+        
 
     # This will be an interactive function with front end
     def change_mode(self, pressed=None):
@@ -140,7 +161,7 @@ class SelfListening:
                 # it is reasonable not to recommend the tracks that are most listened to
                 if idx < 20:
                     # a_name needs to be in url_plus format
-                    self.visited.append((t_name, quote_plus(a_name)))
+                    self.visited.append((t_name, a_name))
                 track_tags = self.lastapi.get_track_tags(t_name, a_name)
                 # Some (t, a) combination does not return track tags
                 if track_tags is None or len(track_tags) == 0:
@@ -159,7 +180,7 @@ class SelfListening:
             
             # Some track does not have artist mbid, even though the artist name is present
             if a_name is not None:
-                self.visited.append((t_name, quote_plus(a_name)))
+                self.visited.append((t_name, a_name))
                 track_tags = self.lastapi.get_track_tags(t_name, a_name)
                 if track_tags is None or len(track_tags) == 0:
                     idx -= 1
@@ -401,17 +422,19 @@ class SelfListening:
         print('Fitting tags: ', tag_comb)
         print('Length: ', len(pf_infos))
         # Exclude visited tracks
-        pf_infos = [(t[1], t[2]) for t in pf_infos if t is not None and (t[1], t[2]) not in self.visited]
+        pf_infos = [(t[1], unquote_plus(t[2])) for t in pf_infos if t is not None and (t[1], unquote_plus(t[2])) not in self.visited]
 
         if len(pf_infos) > 10:
             return pf_infos
         
-        next_fit = random.sample(self.dbapi.get_track_with_tags(t1), 30) + \
-              random.sample(self.dbapi.get_track_with_tags(t2), 15)
+        f1 = self.dbapi.get_track_with_tags(t1)
+        f2 = self.dbapi.get_track_with_tags(t2)
+        next_fit = random.sample(f1, min(len(f1), 30)) + \
+              random.sample(f2, min(len(f2), 15))
         nf_infos = self.dbapi.get_track_info(next_fit)
         
         # Exclude visited tracks
-        nf_infos = [(t[1], t[2]) for t in nf_infos if t is not None and (t[1], t[2]) not in self.visited]
+        nf_infos = [(t[1], unquote_plus(t[2])) for t in nf_infos if t is not None and (t[1], unquote_plus(t[2])) not in self.visited]
 
         return pf_infos + nf_infos
     
@@ -428,7 +451,7 @@ class SelfListening:
         # Will get 50 tracks
         top_tracks = self.lastapi.get_artist_top_tracks(artist)
         # The track id used in database API
-        songs = [(t['track_name'], artist) for t in top_tracks if (t['track_name'], artist) not in self.visited]
+        songs = [(t['track_name'], unquote_plus(artist)) for t in top_tracks if (t['track_name'], unquote_plus(artist)) not in self.visited]
         # songs = [artist + ': ' + t['track_name'] for t in top_tracks]
         return songs
     
