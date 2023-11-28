@@ -320,20 +320,21 @@ class SelfListening:
         # Random sampling, prevent too much tracks
         if len(self.selected) > 100:
             self.selected = random.sample(self.selected, 100)
-        track_infos = self.dbapi.get_track_info(self.selected)
-        for t in track_infos:
+        
+        for t in self.selected:
             # There are certain tracks not in the database
             if t is None:
                 continue
-            track, artist = t[1], t[2]
+            track, artist = t[0], t[1]
+            
             if (track, artist) in self.visited:
                 continue
             scores.append((track, artist, self.song_similarity(track, artist)))
         sorted_scores = sorted(scores, key=lambda x: x[2], reverse=True)
         sorted_scores = [score for score in sorted_scores if score[2] != 0.0]
         # Format output
-        ten_songs = [{'track_name': t[0], 'artist_name': t[1]} for t in sorted_scores[:10]]
-        scores = [{'score': t[2]} for t in sorted_scores[:10]]
+        ten_songs = [{'track_name': s[0], 'artist_name': s[1]} for s in sorted_scores[:10]]
+        scores = [{'score': s[2]} for s in sorted_scores[:10]]
         return ten_songs, scores
 
     # Dependent with self.change_mode
@@ -355,7 +356,7 @@ class SelfListening:
         Input:
             - tag: The target tag selected by the user
         Output:
-            - songs: A list of track_id from database
+            - songs: A list of (track, artist) from database
         '''
         tag_comb = list()
         tag_comb_1 = list()
@@ -398,11 +399,22 @@ class SelfListening:
 
         # Having top three tags appearing in a track in database might be difficult
         perfect_fit = self.dbapi.get_track_with_tags(tag_ids)
-        if len(perfect_fit) > 10:
-            return perfect_fit
-        next_fit = perfect_fit + random.sample(self.dbapi.get_track_with_tags(t1), 20) + \
-              random.sample(self.dbapi.get_track_with_tags(t2), 10)
-        return next_fit
+        pf_infos = self.dbapi.get_track_info(perfect_fit)
+
+        # Exclude visited tracks
+        pf_infos = [(t[1], t[2]) for t in pf_infos if t is not None and (t[1], t[2]) not in self.visited]
+
+        if len(pf_infos) > 10:
+            return pf_infos
+        
+        next_fit = random.sample(self.dbapi.get_track_with_tags(t1), 30) + \
+              random.sample(self.dbapi.get_track_with_tags(t2), 15)
+        nf_infos = self.dbapi.get_track_info(next_fit)
+        
+        # Exclude visited tracks
+        nf_infos = [(t[1], t[2]) for t in nf_infos if t is not None and (t[1], t[2]) not in self.visited]
+
+        return pf_infos + nf_infos
     
     def select_artist_songs(self, artist=None):
         '''
@@ -412,12 +424,13 @@ class SelfListening:
             - artist: The target artist selected by the user
         
         Output:
-            - songs: A list of track_id from database API
+            - songs: A list of (track, artist) from database API
         '''
         # Will get 50 tracks
         top_tracks = self.lastapi.get_artist_top_tracks(artist)
         # The track id used in database API
-        songs = [artist + ': ' + t['track_name'] for t in top_tracks]
+        songs = [(t, artist) for t in top_tracks if (t, artist) not in self.visited]
+        # songs = [artist + ': ' + t['track_name'] for t in top_tracks]
         return songs
     
     def close_server(self):
