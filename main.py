@@ -17,17 +17,17 @@ app = Flask(__name__)
 last_fm = lastfm_api('./Data/conf.json')
 database = database_api('./Data/conf.json')
 
-#top_tags_df = concatenate_feature_csvs("Top Tags")
-#top_tags_df = top_tags_df.fillna(0)
+top_tags_df = concatenate_feature_csvs("Top Tags")
+top_tags_df = top_tags_df.fillna(0)
 print(1)
 
-#top_artists_df = concatenate_feature_csvs("Top Artists")
-#top_artists_df = top_artists_df.fillna(0)
+top_artists_df = concatenate_feature_csvs("Top Artists")
+top_artists_df = top_artists_df.fillna(0)
 print(2)
 
-#top_tracks_df = concatenate_feature_csvs("Top Tracks")
-#top_tracks_df = top_tracks_df.fillna(0)
-#print(3)
+top_tracks_df = concatenate_feature_csvs("Top Tracks")
+top_tracks_df = top_tracks_df.fillna(0)
+print(3)
 
 # top tags_df = pd.read_csv('backend/user/Top Tags_0.csv')
 # top artists_df = pd.read_csv('backend/user/Top Artists_0.csv')
@@ -97,7 +97,7 @@ def provide_targets(username):
     '''
     global user
     global primary_target
-    user = SelfListening(username)
+    user = SelfListening(unquote(username))
     targets = user.get_target()
     primary_target = targets
     return targets
@@ -109,12 +109,12 @@ def recommend_songs(choice):
     this function recommend 10 songs
     '''
     global user
-    user.change_mode(choice)
+    user.change_mode(unquote(choice))
     ten_songs, scores = user.select_ten()
     return {"ten_songs": ten_songs, "scores": scores}
 
-@app.route('/self_listening/add_track/<track>/<artist>')
-def add_track(track, artist):
+@app.route('/self_listening/add_track/<artist>/<track>')
+def add_track(artist, track):
     '''
     The user will select a song from the 10 songs,
     this function add this selected song to the corresponding SelfListening class object
@@ -122,7 +122,7 @@ def add_track(track, artist):
     track: {'track_name', 'artist_name'}
     '''
     global user
-    nt = {'track_name': unquote(track), 'artist_name': artist}
+    nt = {'track_name': unquote(track), 'artist_name': unquote(artist)}
     print(nt)
     user.add_track(nt)
     targets = copy.deepcopy(user.get_target())
@@ -161,7 +161,7 @@ def get_artist_image(artist):
     return jsonify(data)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5500)
 
 
 
