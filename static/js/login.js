@@ -12,7 +12,7 @@ function startLogin() {
             } else {
                 // window.location.pathname = "../../similar_user";
                 const currentUrl = window.location.href;
-                window.location.href = currentUrl + 'similar_user/' + username;
+                window.location.href = currentUrl + 'self_listening/' + username;
             }
         });
 }

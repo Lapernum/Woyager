@@ -22,7 +22,7 @@ function getFirstNode(username) {
     fetch(`/get_user_image/${username}`)
         .then(response => response.json())
         .then(data => {
-            nodes.push({ type: 'user', id: username, size: 50, fx: width / 2, fy: height / 2, imageURL: data })
+            nodes.push({ type: 'user', id: username, size: 30, fx: width / 2, fy: height / 2, imageURL: data })
 
             let linkSelection = svg.selectAll('.link');
             let nodeGroups = svg.selectAll('.node-group');
@@ -86,6 +86,8 @@ function getFirstNode(username) {
                         else {
                             window.open(`https://www.last.fm/music/${d.artist}/_/${d.track}`, '_blank')
                         }
+                        event.stopPropagation(); // Stop the click event from bubbling up to the parent node group
+
                     });
 
                 nodeGroups.style('cursor', 'pointer');
@@ -157,35 +159,39 @@ function getFirstNode(username) {
                             
                             // add artists into node
                             let angleIncrement = (2 * Math.PI) / (artist.length + tag.length); // Distribute nodes evenly in a circle
-                            for (let i = 0; i < artist.length; i++) {
-                                console.log(artist[i]);
+                
+                            let fetchPromises = artist.map((artistName, i) => {
+                                console.log(artistName);
                                 let angle = angleIncrement * i; // angle for this node
-                                let newNode = {
-                                    type: 'artist',
-                                    id: `${artist[i]}`,
-                                    size: 50,
-                                    // Calculate the x, y position based on angle and a fixed radius
-                                    x: d.x + Math.cos(angle) * 100,
-                                    y: d.y + Math.sin(angle) * 100,
-                                    imageURL: fetch(`/get_artist_image/${artist[i]}`)
-                                                .then(response => response.json())
-                                                .then(data => {
-                                                    console.log(data)
-                                                })
-                                                .catch(error => {
-                                                    console.error('There was a problem with the artist image:', error);
-                                                })
-                                };
-                                nodes.push(newNode);
-                                links.push({ source: d.id, target: newNode.id });
-                            }
+                
+                                return fetch(`/get_artist_image/${artistName}`)
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        console.log(data)
+                                        let newNode = {
+                                            type: 'artist',
+                                            id: `${artistName}`,
+                                            size: 30,
+                                            // Calculate the x, y position based on angle and a fixed radius
+                                            x: d.x + Math.cos(angle) * 100,
+                                            y: d.y + Math.sin(angle) * 100,
+                                            imageURL: data
+                                        };
+                                        nodes.push(newNode);
+                                        links.push({ source: d.id, target: newNode.id });
+                                    })
+                                    .catch(error => {
+                                        console.error('There was a problem with the artist image:', error);
+                                    });
+                            });
+                
                             for (let i = 0; i < tag.length; i++) {
                                 console.log(tag[i]);
                                 let angle = angleIncrement * (i + artist.length); // angle for this node
                                 let newNode = {
                                     type: 'tag',
                                     id: `${tag[i]}`,
-                                    size: 50,
+                                    size: 30,
                                     // Calculate the x, y position based on angle and a fixed radius
                                     x: d.x + Math.cos(angle) * 100,
                                     y: d.y + Math.sin(angle) * 100,
@@ -193,17 +199,19 @@ function getFirstNode(username) {
                                 nodes.push(newNode);
                                 links.push({ source: d.id, target: newNode.id });
                             }
-
+                
+                            return Promise.all(fetchPromises);
+                        })
+                        .then(() => {
                             // After the fetch operation is complete, hide the progress bar and clear the flag
                             document.getElementById('progress-bar').style.display = 'none';
-
+                
                             //After the fetch operation is complete, clear the circle progress bar
                             progressBar.remove();
-
+                
                             isFetching = false;
-
+                
                             // Update the simulation with the new nodes and links
-                            
                             update();
                         })
                         .catch(error => {
@@ -217,48 +225,46 @@ function getFirstNode(username) {
                             console.log(data)
                             scores = data.scores
                             ten_songs = data.ten_songs
-
+                
                             let angleIncrement = (2 * Math.PI) / 10; // Distribute nodes evenly in a circle
-                            for (let i = 0; i < ten_songs.length; i++) {
-                                track = ten_songs[i]['track_name']
-                                artist = ten_songs[i]['artist_name']
-                                console.log(track, artist)
-                                let angle = angleIncrement * i; // angle for this node
-                                let newNode = {
-                                    type: 'track',
-                                    id: `${track}, by ${artist}`,
-                                    artist: `${artist}`,
-                                    track: `${track}`,
-                                    size: 50 / scores[0]['score'] * scores[i]['score'],
-                                    // Calculate the x, y position based on angle and a fixed radius
-                                    x: d.x + Math.cos(angle) * 100,
-                                    y: d.y + Math.sin(angle) * 100,
-                                    imageURL: fetch(`/get_track_image/${artist}/${track}`)
-                                                .then(response => response.json())
-                                                .then(data => {
-                                                    console.log(data)
-                                                })
-                                                .catch(error => {
-                                                    console.error('There was a problem with the track image:', error);
-                                                })
-                                };
-                                nodes.push(newNode);
-                                links.push({ source: d.id, target: newNode.id });
-                            }
-                            // After the fetch operation is complete, hide the progress bar and clear the flag
-                            document.getElementById('progress-bar').style.display = 'none';
-
-                            //After the fetch operation is complete, clear the circle progress bar
-                            progressBar.remove();
-
-                            isFetching = false;
-
-                            // Update the simulation with the new nodes and links
+                
+                            let fetchPromises = ten_songs.map((song, i) => {
+                                let track = song['track_name'];
+                                let artist = song['artist_name'];
+                                let angle = angleIncrement * i;
                             
-                            update();
+                                return fetch(`/get_track_image/${artist}/${track}`)
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        let newNode = {
+                                            type: 'track',
+                                            id: `${track}, by ${artist}`,
+                                            artist: `${artist}`,
+                                            track: `${track}`,
+                                            size: 30 / scores[0]['score'] * scores[i]['score'],
+                                            x: d.x + Math.cos(angle) * 100,
+                                            y: d.y + Math.sin(angle) * 100,
+                                            imageURL: data
+                                        };
+                
+                                        nodes.push(newNode);
+                                        links.push({ source: d.id, target: newNode.id });
+                                    });
+                            });
+                            
+                            Promise.all(fetchPromises)
+                                .then(() => {
+                                    document.getElementById('progress-bar').style.display = 'none';
+                                    progressBar.remove();
+                                    isFetching = false;
+                                    update();
+                                })
+                                .catch(error => {
+                                    console.error('Problem with tag operation', error);
+                                });
                         })
                         .catch(error => {
-                            console.error('Problem with tag operation', error)
+                            console.error('Problem with tag operation', error);
                         });
                 }
                 else if (d.type == 'artist') {
@@ -268,47 +274,46 @@ function getFirstNode(username) {
                             console.log(data)
                             scores = data.scores
                             ten_songs = data.ten_songs
-
+                
                             let angleIncrement = (2 * Math.PI) / 10; // Distribute nodes evenly in a circle
-                            for (let i = 0; i < ten_songs.length; i++) {
-                                track = ten_songs[i]['track_name']
-                                artist = ten_songs[i]['artist_name']
-                                console.log(track, artist)
-                                let angle = angleIncrement * i; // angle for this node
-                                let newNode = {
-                                    type: 'track',
-                                    id: `${track}, by ${artist}`,
-                                    artist: `${artist}`,
-                                    track: `${track}`,
-                                    size: 50 / scores[0]['score'] * scores[i]['score'],
-                                    // Calculate the x, y position based on angle and a fixed radius
-                                    x: d.x + Math.cos(angle) * 100,
-                                    y: d.y + Math.sin(angle) * 100,
-                                    imageURL: fetch(`/get_track_image/${artist}/${track}`)
-                                                .then(response => response.json())
-                                                .then(data => data)
-                                                .catch(error => {
-                                                    console.error('There was a problem with the track image:', error);
-                                                })
-                                };
-                                nodes.push(newNode);
-                                console.log(newNode)
-                                links.push({ source: d.id, target: newNode.id });
-                            }
-                            // After the fetch operation is complete, hide the progress bar and clear the flag
-                            document.getElementById('progress-bar').style.display = 'none';
-
-                            //After the fetch operation is complete, clear the circle progress bar
-                            progressBar.remove();
-
-                            isFetching = false;
-
-                            // Update the simulation with the new nodes and links
-                            
-                            update();
+                
+                            let fetchPromises = ten_songs.map((song, i) => {
+                                let track = song['track_name'];
+                                let artist = song['artist_name'];
+                                let angle = angleIncrement * i;
+                
+                                return fetch(`/get_track_image/${artist}/${track}`)
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        let newNode = {
+                                            type: 'track',
+                                            id: `${track}, by ${artist}`,
+                                            artist: `${artist}`,
+                                            track: `${track}`,
+                                            size: 30 / scores[0]['score'] * scores[i]['score'],
+                                            x: d.x + Math.cos(angle) * 100,
+                                            y: d.y + Math.sin(angle) * 100,
+                                            imageURL: data
+                                        };
+                
+                                        nodes.push(newNode);
+                                        links.push({ source: d.id, target: newNode.id });
+                                    });
+                            });
+                
+                            Promise.all(fetchPromises)
+                                .then(() => {
+                                    document.getElementById('progress-bar').style.display = 'none';
+                                    progressBar.remove();
+                                    isFetching = false;
+                                    update();
+                                })
+                                .catch(error => {
+                                    console.error('Problem with artist operation', error);
+                                });
                         })
                         .catch(error => {
-                            console.error('Problem with artist operation', error)
+                            console.error('Problem with artist operation', error);
                         });
                 }
                 else {
