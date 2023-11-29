@@ -2,8 +2,12 @@
 const width = window.innerWidth;
 const height = window.innerHeight;
 const svg = d3.select('#visualization').append('svg')
-    .attr('width', width)
-    .attr('height', height);
+    .attr('width', 30000)
+    .attr('height', 20000);
+
+console.log(width);
+console.log(height)
+    
 
 
 window.onload = function() {
@@ -54,14 +58,15 @@ function getFirstNode(username) {
                     .call(drag);
 
                 nodeGroups.selectAll('image')
-                    .data(d => [d]) // Pass the parent node data down to the children
-                    .join('image')
-                    .attr('class', 'node')
-                    .attr('xlink:href', d => d.imageURL) // Set the image URL
-                    .attr('x', d => -d.size) // Center the image horizontally
-                    .attr('y', d => -d.size) // Center the image vertically
-                    .attr('height', d => d.size * 2) // Set the image height
-                    .attr('width', d => d.size * 2); // Set the image width
+                .data(d => [d]) // Pass the parent node data down to the children
+                .join('image')
+                .attr('class', 'node')
+                .attr('xlink:href', d => d.imageURL) // Set the image URL
+                .attr('x', d => -d.size) // Center the image horizontally
+                .attr('y', d => -d.size) // Center the image vertically
+                .attr('height', d => d.size * 2) // Set the image height
+                .attr('width', d => d.size * 2) // Set the image width
+                .style('clip-path', 'circle(50%)'); // Make the image circular
 
                 nodeGroups.selectAll('text')
                     .data(d => [d])
@@ -112,16 +117,37 @@ function getFirstNode(username) {
                 d3.select(this).select('.error-text').remove();
 
 
-                const size = d.size + 5; // The size of the square
-                const squarePath = `M ${-size} ${-size} H ${size} V ${size} H ${-size} Z`; // The path for the square
-                
+                const radius = d.size + 5; // The radius of the circle
+                const circlePath = `
+                    M ${-radius}, 0
+                    a ${radius},${radius} 0 1,0 ${2*radius},0
+                    a ${radius},${radius} 0 1,0 ${-2*radius},0
+                `;
+            
+                const gradient = d3.select('svg').append('defs')
+                .append('linearGradient')
+                .attr('id', 'gradient')
+                .attr('x1', '0%')
+                .attr('y1', '0%')
+                .attr('x2', '100%')
+                .attr('y2', '0%');
+            
+                // Define the color stops of the gradient
+                gradient.append('stop')
+                .attr('offset', '0%')
+                .attr('stop-color', '#A9A9A9');
+            
+            gradient.append('stop')
+                .attr('offset', '100%')
+                .attr('stop-color', '#C0C0C0');
+
                 const progressBar = d3.select(this).append('path')
                     .attr('class', 'progress-bar')
-                    .attr('d', squarePath) // Set the path
-                    .attr('transform', `translate(${d.x}, ${d.y})`) // Position the square
+                    .attr('d', circlePath) // Set the path
+                    .attr('transform', `translate(${d.x}, ${d.y})`) // Position the circle
                     .attr('stroke-width', 5)
                     .attr('fill', 'none')
-                    .attr('stroke', '#335778');
+                    .attr('stroke', 'url(#gradient)');
 
                 const progressBarDuration = 30000; // Initial duration for the progress bar
 

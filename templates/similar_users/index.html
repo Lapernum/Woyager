@@ -10,8 +10,103 @@
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@100;300;400;500;700;900&family=Outfit:wght@100;200;300;400;500;600;700;800;900&display=swap');
 
         body {
-            font-family: 'Outfit', sans-serif;
+        background: linear-gradient(to bottom, rgb(159, 211, 233) 0%, rgb(185, 221, 232) 30%, rgb(225, 211, 230) 100%);
+        background-attachment: fixed;
+        background-repeat: no-repeat;
+        background-size: cover;
+        color: #333;
+        margin: 0;
+        padding: 0;
+        font-family: 'Arial', sans-serif;
         }
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-20px); /* Adjust this value to control the floating range */
+            }
+        }
+
+        .cloud {
+            animation: float 3s ease-in-out infinite;
+            z-index: -1; /* This sets the stacking order to the lowest */
+            background-color: #fff;
+            background-image: -webkit-linear-gradient(hsla(0,0%,0%,0), hsla(0,0%,0%,.1));
+            border-radius: 1em;
+            box-shadow: inset 0 0 0 1px hsla(0,0%,100%,.5);
+            display: inline-block;
+            height: 1em;
+            left: 50%;
+            margin-left: -1.5em;
+            position: absolute;
+            top: 50%;
+            width: 3em;
+            -webkit-filter: drop-shadow(0 2px 3px hsla(0,0%,0%,.25));
+        }
+        .cloud:after,
+        .cloud:before {
+            background-color: #fff;
+            content: '';
+            border-radius: 100%;
+            position: absolute;
+        }
+        .cloud:after {
+            background-image: -webkit-linear-gradient(hsla(0,0%,0%,0) 50%, hsla(0,0%,0%,.025));
+            height: 1em;
+            right: .4em;
+            top: -.5em;
+            width: 1em;
+        }
+        .cloud:before {
+            background-image: -webkit-linear-gradient(hsla(0,0%,0%,0) 50%, hsla(0,0%,0%,.075));
+            height: 1.6em;
+            left: .4em;
+            top: -.75em;
+            width: 1.6em;
+        }
+        
+        #cloud1 {
+            animation: float 4s ease-in-out infinite;
+            top: 15%;
+            left: 25%;
+            width: 4em; /* Larger cloud */
+            height: 2em;
+        }
+        #cloud1:after,
+        #cloud1:before {
+            height: 2em;
+            width: 2em;
+        }
+
+
+        #cloud2 {
+            animation: float 5s ease-in-out infinite;
+            animation-delay: 1s;
+            top: 35%;
+            left: 75%;
+            width: 2em; /* Smaller cloud */
+            height: 1em;
+        }
+        #cloud2:after,
+        #cloud2:before {
+            height: 1em;
+            width: 1em;
+        }
+        #cloud3 {
+            animation: float 6s ease-in-out infinite;
+            animation-delay: 2s;
+            top: 70%;
+            left: 30%;
+            width: 3em; /* Original size */
+            height: 1em;
+        }
+        
+        #cloud3:after,
+        #cloud3:before {
+            height: 1em;
+            width: 1em;
+        }​
 
         /* Existing styles */
         .node {
@@ -58,9 +153,9 @@
     </style>
 </head>
 <body>
-
-    <div id="loading-overlay"></div>
-
+    <div class="cloud" id="cloud1"></div>
+    <div class="cloud" id="cloud2"></div>
+    <div class="cloud" id="cloud3"></div>
     <div id="visualization"></div>
     <div id="progress-bar"></div>
 

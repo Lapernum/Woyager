@@ -100,11 +100,11 @@ class lastfm_api:
             data = response.json()
             if 'album' in data['track']:
                 image_url = data['track']['album']['image'][1]['#text']
-                return image_url
+                return "https://drive.google.com/uc?id=1ZszvYt6rDADFlt210jfJ4BEdhBvf9r7G"
             else:
-                return None
+                return "https://drive.google.com/uc?id=1ZszvYt6rDADFlt210jfJ4BEdhBvf9r7G"
         else:
-            return None
+            return "https://drive.google.com/uc?id=1ZszvYt6rDADFlt210jfJ4BEdhBvf9r7G"
         
     def get_artist_image_url(self, artist):
         """Get the artist's image url from last.fm API.
@@ -119,6 +119,7 @@ class lastfm_api:
 
         if response.status_code == 200:
             data = response.json()
+            print(data)
             image_url = data['artist']['image'][1]['#text']
             return image_url
         else:

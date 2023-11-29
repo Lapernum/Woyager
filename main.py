@@ -17,16 +17,16 @@ app = Flask(__name__)
 last_fm = lastfm_api('./Data/conf.json')
 database = database_api('./Data/conf.json')
 
-top_tags_df = concatenate_feature_csvs("Top Tags")
-top_tags_df = top_tags_df.fillna(0)
+#top_tags_df = concatenate_feature_csvs("Top Tags")
+#top_tags_df = top_tags_df.fillna(0)
 print(1)
 
-top_artists_df = concatenate_feature_csvs("Top Artists")
-top_artists_df = top_artists_df.fillna(0)
+#top_artists_df = concatenate_feature_csvs("Top Artists")
+#top_artists_df = top_artists_df.fillna(0)
 print(2)
 
-top_tracks_df = concatenate_feature_csvs("Top Tracks")
-top_tracks_df = top_tracks_df.fillna(0)
+#top_tracks_df = concatenate_feature_csvs("Top Tracks")
+#top_tracks_df = top_tracks_df.fillna(0)
 print(3)
 
 # top tags_df = pd.read_csv('backend/user/Top Tags_0.csv')
@@ -111,7 +111,9 @@ def recommend_songs(choice):
     global user
     user.change_mode(unquote(choice))
     ten_songs, scores = user.select_ten()
-    return {"ten_songs": ten_songs, "scores": scores}
+    scores = scores[:5]
+    # apply minimax to scores to map it into (20,40)
+    return {"ten_songs": ten_songs[:5], "scores": scores}
 
 @app.route('/self_listening/add_track/<artist>/<track>')
 def add_track(artist, track):
