@@ -5,3 +5,5 @@ Data/conf_archive.json
 backend/user/user_features/Top Tracks.csv
 .DS_Store
 node_modules/
+**/__pycache__
+backend/user/__pycache__
