@@ -86,10 +86,25 @@ class SelfListening:
         Output:
             - None
         '''
+        if len(self.added_track) > 0:
+            # Merge added_track_tag to top_tag
+            for t, c in self.added_track_tag.items():
+                if t in self.top_tag:
+                    self.top_tag[t] += c * 0.4
+                else:
+                    self.top_tag[t] = c * 0.4
+        max_tag_cnt = max(d for d in self.top_tag.values())
+        temp = sorted(self.top_tag.items(), key=lambda x: x[1], reverse=True)
+        self.top_tag = dict(temp[:30])
+        self.top_tag = {tag: math.floor((count / max_tag_cnt) * 100) for tag, count in self.top_tag.items()}
+        
+        self.added_track_tag.clear()
         self.added_track.append(added_song)
         self.visited.append((added_song['track_name'], added_song['artist_name']))
         # Update self.added_track_tag for 'recurrent' idea
+
         track_tags = self.lastapi.get_track_tags(added_song['track_name'], added_song['artist_name'])
+        artist_tags = self.lastapi.get_artist_tags(added_song['artist_name'])
         if track_tags is not None:
             tag_dict = {t['tag_name']: t['tag_count'] for t in track_tags}
             for t, c in tag_dict.items():
@@ -97,6 +112,14 @@ class SelfListening:
                     self.added_track_tag[t] += c
                 else:
                     self.added_track_tag[t] = c
+        if artist_tags is not None:
+            tag_dict = {t['tag_name']: t['tag_count'] for t in artist_tags}
+            for t, c in tag_dict.items():
+                if t in self.added_track_tag:
+                    self.added_track_tag[t] += c
+                else:
+                    self.added_track_tag[t] = c
+        
         max_tag_cnt = max(d for d in self.added_track_tag.values())
 
         self.added_track_tag = {tag: math.floor((count / max_tag_cnt) * 100) for tag, count in self.added_track_tag.items()}
