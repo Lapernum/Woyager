@@ -168,8 +168,8 @@ def calculate_user_distance(username, top_tracks_df, top_artists_df, top_tags_df
     distances_df = distances_df[~distances_df['user_id'].isin(explored_user)][0:7]
     print("finish fetch")
 
-    # apply normalization to map it into (20,50)
-    distances_df['similarity_score'] = distances_df['similarity_score'].apply(lambda x: 20 + 30 * (x - distances_df['similarity_score'].min()) / (distances_df['similarity_score'].max() - distances_df['similarity_score'].min()))
+    # apply normalization to map it into (20,40)
+    distances_df['similarity_score'] = distances_df['similarity_score'].apply(lambda x: 20 + 20 * (x - distances_df['similarity_score'].min()) / (distances_df['similarity_score'].max() - distances_df['similarity_score'].min()))
     print("finish normalization")
 
 
