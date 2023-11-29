@@ -149,6 +149,29 @@
         }
 
 
+        #navigation_select {
+            position: fixed;
+            bottom: 95%;
+            left: 6%;
+            transform: translateX(-50%);
+            padding: 5px;
+            font-size: 14px;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            background: linear-gradient(to right, #5fa8d3, #3f87a6);
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        #navigation_select:hover {
+            background: linear-gradient(to right, #3f87a6, #2c657b);
+        }
+
+        #navigation_select option {
+            color: black;
+        }
+
 
     </style>
 </head>
@@ -158,6 +181,12 @@
     <div class="cloud" id="cloud3"></div>
     <div id="visualization"></div>
     <div id="progress-bar"></div>
+
+    <select id="navigation_select" onchange="navigateTo(this.value)">
+        <option value="" disabled selected>Select Mode</option>
+        <option value="self_listening">Self Listening</option>
+        <option value="similar_user">Similar User</option>
+    </select>
 
     <script src="/static/js/similar_user.js"></script>
 </body>

@@ -8,6 +8,14 @@ const svg = d3.select('#visualization').append('svg')
 
 let nodes = [];
 
+function navigateTo(page) {
+    if (page) {
+        url_elements = window.location.href.split("/");
+        let username = url_elements[url_elements.length - 1];
+        window.location.href = window.location.origin + '/' + page + '/' + username;
+    }
+}
+
 function getFirstNode(username) {
     // fetch(`/targets/${username}`)
     //     .then(response => response.json())
@@ -163,7 +171,7 @@ function getFirstNode(username) {
                     else if (d.type == 'artist') {
                         progressBarDuration = 8000; // Duration for the progress bar
                     }
-                    
+
                 
 
                 const circumference = 2 * Math.PI * progressBar.attr('r');

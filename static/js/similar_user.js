@@ -27,12 +27,20 @@ window.onload = function() {
 
 let nodes = [];
 
+function navigateTo(page) {
+    if (page) {
+        url_elements = window.location.href.split("/");
+        let username = url_elements[url_elements.length - 1];
+        window.location.href = window.location.origin + '/' + page + '/' + username;
+    }
+}
+
 function getFirstNode(username) {
     console.log(username);
     fetch(`/get_user_image/${username}`)
         .then(response => response.json())
         .then(data => {
-            nodes.push({ id: username, size: 50, fx: width / 2, fy: height / 2, imageURL: data })
+            nodes.push({ id: username, size: 30, fx: width / 2, fy: height / 2, imageURL: data })
 
             let linkSelection = svg.selectAll('.link');
             let nodeGroups = svg.selectAll('.node-group');
@@ -137,9 +145,9 @@ function getFirstNode(username) {
                 .attr('offset', '0%')
                 .attr('stop-color', '#A9A9A9');
             
-            gradient.append('stop')
-                .attr('offset', '100%')
-                .attr('stop-color', '#C0C0C0');
+                gradient.append('stop')
+                    .attr('offset', '100%')
+                    .attr('stop-color', '#C0C0C0');
 
                 const progressBar = d3.select(this).append('path')
                     .attr('class', 'progress-bar')

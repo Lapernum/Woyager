@@ -45,6 +45,10 @@
         <p class="text-lg mb-2">Please input your last.fm username</p>
         <div id="username-input">
             <input type="text" placeholder="Who are you?" class="input input-bordered input-accent w-full max-w-xs border-[#335778]" id="username_input" />
+            <select id="mode_select" class="input input-bordered input-accent w-40 max-w-xs border-[#335778] ml-1">
+                <option value="self_listening">Self Listening</option>
+                <option value="similar_user">Similar User</option>
+            </select>
             <button class="btn btn-accent border-[#335778] bg-[#335778] text-[white] ml-1" onclick="startLogin()">Start Journey</button>
         </div>
     </div>
