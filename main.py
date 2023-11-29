@@ -97,7 +97,7 @@ def provide_targets(username):
     '''
     global user
     global primary_target
-    user = SelfListening(username)
+    user = SelfListening(unquote(username))
     targets = user.get_target()
     primary_target = targets
     return targets
@@ -109,14 +109,14 @@ def recommend_songs(choice):
     this function recommend 10 songs
     '''
     global user
-    user.change_mode(choice)
+    user.change_mode(unquote(choice))
     ten_songs, scores = user.select_ten()
     scores = scores[:5]
     # apply minimax to scores to map it into (20,40)
     return {"ten_songs": ten_songs[:5], "scores": scores}
 
-@app.route('/self_listening/add_track/<track>/<artist>')
-def add_track(track, artist):
+@app.route('/self_listening/add_track/<artist>/<track>')
+def add_track(artist, track):
     '''
     The user will select a song from the 10 songs,
     this function add this selected song to the corresponding SelfListening class object
@@ -124,7 +124,7 @@ def add_track(track, artist):
     track: {'track_name', 'artist_name'}
     '''
     global user
-    nt = {'track_name': unquote(track), 'artist_name': artist}
+    nt = {'track_name': unquote(track), 'artist_name': unquote(artist)}
     print(nt)
     user.add_track(nt)
     targets = copy.deepcopy(user.get_target())
@@ -163,7 +163,7 @@ def get_artist_image(artist):
     return jsonify(data)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5500)
 
 
 

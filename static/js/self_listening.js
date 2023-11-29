@@ -163,6 +163,7 @@ function getFirstNode(username) {
                     else if (d.type == 'artist') {
                         progressBarDuration = 8000; // Duration for the progress bar
                     }
+                    
                 
 
                 const circumference = 2 * Math.PI * progressBar.attr('r');
