@@ -100,7 +100,9 @@ class lastfm_api:
             data = response.json()
             if 'album' in data['track']:
                 image_url = data['track']['album']['image'][1]['#text']
-                return "https://drive.google.com/uc?id=1ZszvYt6rDADFlt210jfJ4BEdhBvf9r7G"
+                if image_url == "":
+                    return "https://drive.google.com/uc?id=1ZszvYt6rDADFlt210jfJ4BEdhBvf9r7G"
+                return image_url
             else:
                 return "https://drive.google.com/uc?id=1ZszvYt6rDADFlt210jfJ4BEdhBvf9r7G"
         else:
