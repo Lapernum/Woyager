@@ -323,6 +323,8 @@ class SelfListening:
             return 0
         track_tags = {t['tag_name']: t['tag_count'] for t in track_tags}
         weight = len(self.added_track) * 0.05
+        if weight > 1:
+            weight = 1
         return self.tag_sim_score(track_tags, self.top_tag) * (1 - weight) \
               + self.tag_sim_score(track_tags, self.added_track_tag) * len(self.added_track_tag) * weight
         
