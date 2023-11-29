@@ -2,8 +2,8 @@
 const width = window.innerWidth;
 const height = window.innerHeight;
 const svg = d3.select('#visualization').append('svg')
-    .attr('width', width)
-    .attr('height', height);
+    .attr('width', 20000)
+    .attr('height', 30000);
 
 
 let nodes = [];
@@ -56,7 +56,9 @@ function getFirstNode(username) {
                     .attr('x', d => -d.size) // Center the image horizontally
                     .attr('y', d => -d.size) // Center the image vertically
                     .attr('height', d => d.size * 2) // Set the image height
-                    .attr('width', d => d.size * 2); // Set the image width
+                    .attr('width', d => d.size * 2) // Set the image width
+                    .style('clip-path', 'circle(50%)'); // Make the image circular
+
 
                 nodeGroups.selectAll('text')
                     .data(d => [d])
@@ -117,20 +119,51 @@ function getFirstNode(username) {
                 document.getElementById('progress-bar').style.display = 'block';  // Show the progress bar
 
 
+                // Define the circle path generator
+                const radius = d.size + 5; // The radius of the circle
+                const circlePath = `
+                    M ${-radius}, 0
+                    a ${radius},${radius} 0 1,0 ${2*radius},0
+                    a ${radius},${radius} 0 1,0 ${-2*radius},0
+                `;
+            
+                const gradient = d3.select('svg').append('defs')
+                .append('linearGradient')
+                .attr('id', 'gradient')
+                .attr('x1', '0%')
+                .attr('y1', '0%')
+                .attr('x2', '100%')
+                .attr('y2', '0%');
+            
+                // Define the color stops of the gradient
+                gradient.append('stop')
+                .attr('offset', '0%')
+                .attr('stop-color', '#A9A9A9');
+            
+                gradient.append('stop')
+                    .attr('offset', '100%')
+                    .attr('stop-color', '#C0C0C0');
 
-                const size = d.size + 5; // The size of the square
-                const squarePath = `M ${-size} ${-size} H ${size} V ${size} H ${-size} Z`; // The path for the square
-                
                 const progressBar = d3.select(this).append('path')
                     .attr('class', 'progress-bar')
-                    .attr('d', squarePath) // Set the path
-                    .attr('transform', `translate(${d.x}, ${d.y})`) // Position the square
+                    .attr('d', circlePath) // Set the path
+                    .attr('transform', `translate(${d.x}, ${d.y})`) // Position the circle
                     .attr('stroke-width', 5)
                     .attr('fill', 'none')
-                    .attr('stroke', '#335778');
+                    .attr('stroke', 'url(#gradient)');
+                
+                    let progressBarDuration;
 
-                const progressBarDuration = 30000; // Initial duration for the progress bar
-
+                    if (d.type == 'user') {
+                        progressBarDuration = 20000; // Duration for the progress bar
+                    }
+                    else if (d.type == 'tag') {    
+                        progressBarDuration = 4000; // Duration for the progress bar
+                    }
+                    else if (d.type == 'artist') {
+                        progressBarDuration = 8000; // Duration for the progress bar
+                    }
+                
 
                 const circumference = 2 * Math.PI * progressBar.attr('r');
                 progressBar.attr('stroke-dasharray', `${circumference} ${circumference}`)
@@ -148,7 +181,7 @@ function getFirstNode(username) {
                     .on('end', () => {
                         progressBar.remove();  // Remove the progress bar when the fetch operation is done
                     });
-                console.log(d)
+   
                 if (d.type == 'user') {
                     // Fetch targets from server
                     fetch(`/targets/${d.id}`)
@@ -175,7 +208,7 @@ function getFirstNode(username) {
                                             // Calculate the x, y position based on angle and a fixed radius
                                             x: d.x + Math.cos(angle) * 100,
                                             y: d.y + Math.sin(angle) * 100,
-                                            imageURL: data
+                                            imageURL: "https://drive.google.com/uc?id=16NKs6mWVua2sPqaDsaj7qo-oNyw36Yjs" //need to change
                                         };
                                         nodes.push(newNode);
                                         links.push({ source: d.id, target: newNode.id });
@@ -195,6 +228,7 @@ function getFirstNode(username) {
                                     // Calculate the x, y position based on angle and a fixed radius
                                     x: d.x + Math.cos(angle) * 100,
                                     y: d.y + Math.sin(angle) * 100,
+                                    imageURL: "https://drive.google.com/uc?id=1HZ0V0q1x3iVlYMeF3M_245CEu6LZAg2G" //need to change
                                 };
                                 nodes.push(newNode);
                                 links.push({ source: d.id, target: newNode.id });
@@ -231,7 +265,8 @@ function getFirstNode(username) {
                             let fetchPromises = ten_songs.map((song, i) => {
                                 let track = song['track_name'];
                                 let artist = song['artist_name'];
-                                let angle = angleIncrement * i;
+                                let parentAngle = Math.atan2(d.y - height / 2 , d.x - width / 2);
+                                let angle = angleIncrement * i + parentAngle - Math.PI / 2;
                             
                                 return fetch(`/get_track_image/${artist}/${track}`)
                                     .then(response => response.json())
@@ -280,7 +315,14 @@ function getFirstNode(username) {
                             let fetchPromises = ten_songs.map((song, i) => {
                                 let track = song['track_name'];
                                 let artist = song['artist_name'];
-                                let angle = angleIncrement * i;
+                                console.log(song)
+                            
+                                // Calculate the angle of the parent node relative to the center of the circle
+                                let parentAngle = Math.atan2(d.y - height / 2 , d.x - width / 2);
+                                console.log(parentAngle)
+
+                            
+                                let angle = angleIncrement * i + parentAngle - Math.PI / 2;
                 
                                 return fetch(`/get_track_image/${artist}/${track}`)
                                     .then(response => response.json())
@@ -322,25 +364,24 @@ function getFirstNode(username) {
                         .then(data => {
                             artist = data['artist']
                             tag = data['tag']
+
+                            // make artist unique
+                            artist = [...new Set(artist)]
                             
                             // add artists into node
-                            let angleIncrement = (2 * Math.PI) / (artist.length + tag.length); // Distribute nodes evenly in a circle
+                            let angleIncrement = (Math.PI) / (artist.length + tag.length); // Distribute nodes evenly in a circle
+                            let parentAngle = Math.atan2(d.y - height / 2 , d.x - width / 2);
                             for (let i = 0; i < artist.length; i++) {
                                 console.log(artist[i]);
-                                let angle = angleIncrement * i; // angle for this node
+                                let angle = angleIncrement * i + parentAngle - Math.PI / 2; // angle for this node
                                 let newNode = {
                                     type: 'artist',
                                     id: `${artist[i]}`,
-                                    size: 50,
+                                    size: 30,
                                     // Calculate the x, y position based on angle and a fixed radius
                                     x: d.x + Math.cos(angle) * 100,
                                     y: d.y + Math.sin(angle) * 100,
-                                    imageURL: fetch(`/get_artist_image/${artist[i]}`)
-                                                .then(response => response.json())
-                                                .then(data => data)
-                                                .catch(error => {
-                                                    console.error('There was a problem with the artist image:', error);
-                                                })
+                                    imageURL: "https://drive.google.com/uc?id=16NKs6mWVua2sPqaDsaj7qo-oNyw36Yjs" //need to change
                                 };
                                 nodes.push(newNode);
                                 links.push({ source: d.id, target: newNode.id });
@@ -351,10 +392,11 @@ function getFirstNode(username) {
                                 let newNode = {
                                     type: 'tag',
                                     id: `${tag[i]}`,
-                                    size: 50,
+                                    size: 30,
                                     // Calculate the x, y position based on angle and a fixed radius
                                     x: d.x + Math.cos(angle) * 100,
                                     y: d.y + Math.sin(angle) * 100,
+                                    imageURL: "https://drive.google.com/uc?id=1HZ0V0q1x3iVlYMeF3M_245CEu6LZAg2G" //need to change
                                 };
                                 nodes.push(newNode);
                                 links.push({ source: d.id, target: newNode.id });

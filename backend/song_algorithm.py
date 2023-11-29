@@ -60,8 +60,10 @@ class SelfListening:
         self.target_tag = {}
         self.build_top_tags()
         # The target tags and artists for frontend: {'tags': list(tags), 'artists': list(artists)}
-        self.target = {'tag': list(self.target_tag.keys()), 'artist': list(self.target_artist.keys())}
-
+        self.target = {
+            'tag': [k for k, v in sorted(self.target_tag.items(), key=lambda x: x[1])[:3]], 
+            'artist': [k for k, v in sorted(self.target_artist.items(), key=lambda x: x[1])[:3]]
+        }
         # Mode, depedent on the selected button
         self.mode = 'tag'
     
