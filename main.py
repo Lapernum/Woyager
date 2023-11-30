@@ -10,9 +10,12 @@ import pandas as pd
 from flask import render_template
 from urllib.parse import unquote
 import copy
+from flask import Flask, jsonify, session  # Import session
 
 
 app = Flask(__name__)
+app.secret_key = 'your secret key'  # Initialize the secret key
+
 
 last_fm = lastfm_api('./Data/conf.json')
 database = database_api('./Data/conf.json')
@@ -44,6 +47,8 @@ user_id = None
 
 def calculate(username):
     try:
+        # Use session to store explored_user
+        explored_user = session.get('explored_user')
         print(explored_user)               
         df = calculate_user_distance(username, top_tracks_df, top_artists_df, top_tags_df, explored_user)
         #drop row with explored user
@@ -51,12 +56,14 @@ def calculate(username):
         json_data = df.to_json(orient='records')
 
         # append usernames in df to explored user
-        explored_user.update(df['user_id'].tolist())
+        explored_user.extend(df['user_id'].tolist())
+        session['explored_user'] = explored_user  # Save explored_user back to session
     
         return json_data
     except Exception as e:
         print(e)
         return None
+
 
 @app.route('/') #hard code first
 def index():
@@ -64,7 +71,7 @@ def index():
 
 @app.route('/similar_user/<username>') #hard code first
 def similar_user_index(username):
-    return render_template('/similar_users/index.html')
+    return render_template('/similar_users/index.html', username=username)
 
 @app.route('/get_data/<username>')
 def get_data(username):
@@ -74,10 +81,11 @@ def get_data(username):
 
 @app.route('/clear_explored_users', methods=['POST']) #hard code first
 def clear_explored_users():
-    global user_id
-    explored_user.clear()
+    user_id = session.get('user_id')
+
+    session['explored_user'] = []  # Clear explored_user in session
     if user_id is not None:
-        explored_user.add(user_id)
+        session['explored_user'].append(user_id)
     return jsonify({'status': 'success'}), 200
 
 # @app.route('/login')
@@ -137,11 +145,17 @@ def add_track(artist, track):
 
 @app.route('/check_user/<username>')
 def check_user(username):
-    global user_id
     data = last_fm.get_user_image_url(username)
     user_id = database.get_user_id(username)
+
     if user_id is not None:
-        explored_user.add(user_id)
+        session['user_id'] = user_id
+    
+    # Use session to store explored_user
+    explored_user = []
+    if user_id is not None:
+        explored_user.append(user_id)
+        session['explored_user'] = explored_user  # Save explored_user back to session
         
     if data is None:
         return jsonify(False)

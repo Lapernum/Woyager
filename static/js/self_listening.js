@@ -22,6 +22,15 @@ function navigateTo(page) {
     document.getElementById("b-color-pink").style.setProperty("z-index", "10");
     document.body.style.setProperty("background", "rgb(225, 211, 230)");
     document.getElementById("b-color-pink").style.setProperty("opacity", "1");
+    fetch('/clear_explored_users', {
+        method: 'POST',
+    })
+    .then(response => response.json())
+    .then(data => console.log(data))
+    .catch((error) => {
+        console.error('Error:', error);
+    });
+
     setTimeout(function()
         {
             if (page) {
@@ -72,6 +81,116 @@ function getFirstNode(username) {
                     .join('g')
                     .attr('class', 'node-group')
                     .call(drag);
+
+                // Light blue gradient
+                var lightBlueGradient = svg.append("defs")
+                .append("linearGradient")
+                .attr("id", "lightBlueGradient")
+                .attr("x1", "0%")
+                .attr("y1", "0%")
+                .attr("x2", "100%")
+                .attr("y2", "100%");
+
+                lightBlueGradient.append("stop")
+                .attr("offset", "0%")
+                .attr("stop-color", "SkyBlue");
+              
+                lightBlueGradient.append("stop")
+                .attr("offset", "100%")
+                .attr("stop-color", "DeepSkyBlue");
+                
+                // Blue gradient
+                var blueGradient = svg.append("defs")
+                .append("linearGradient")
+                .attr("id", "blueGradient")
+                .attr("x1", "0%")
+                .attr("y1", "0%")
+                .attr("x2", "100%")
+                .attr("y2", "100%");
+                
+                blueGradient.append("stop")
+                .attr("offset", "0%")
+                .attr("stop-color", "RoyalBlue");
+              
+                blueGradient.append("stop")
+                .attr("offset", "100%")
+                .attr("stop-color", "MidnightBlue");
+
+                // Pink gradient
+                var pinkGradient = svg.append("defs")
+                .append("linearGradient")
+                .attr("id", "pinkGradient")
+                .attr("x1", "0%")
+                .attr("y1", "0%")
+                .attr("x2", "100%")
+                .attr("y2", "100%");
+
+                pinkGradient.append("stop")
+                .attr("offset", "0%")
+                .attr("stop-color", "LightPink");
+
+                pinkGradient.append("stop")
+                .attr("offset", "100%")
+                .attr("stop-color", "DeepPink");
+
+                // Light purple gradient
+                var lightPurpleGradient = svg.append("defs")
+                .append("linearGradient")
+                .attr("id", "lightPurpleGradient")
+                .attr("x1", "0%")
+                .attr("y1", "0%")
+                .attr("x2", "100%")
+                .attr("y2", "100%");
+
+                lightPurpleGradient.append("stop")
+                .attr("offset", "0%")
+                .attr("stop-color", "Thistle");
+
+                lightPurpleGradient.append("stop")
+                .attr("offset", "100%")
+                .attr("stop-color", "MediumPurple");
+                                
+                var circle = nodeGroups.selectAll('circle')
+                    .data(d => [d]) // Pass the parent node data down to the children
+                    .join('circle')
+                    .attr('class', 'node-circle')
+                    .attr('cx', d => d.x) // Position the circle at the node's center
+                    .attr('cy', d => d.y)
+                    .attr("r", function(d) { 
+                        if (d.transformed == true) {
+                            return d.size  + 5;
+                        } else {
+                            return d.size/2 + 5;
+                        }
+                    }) 
+                    .style('fill', 'none') // No fill for hollow effect
+                    .style('stroke', d => {
+                        switch(d.type) {
+                            case 'tag':
+                                return 'url(#lightBlueGradient)';
+                            case 'artist':
+                                return 'url(#pinkGradient)';
+                            case 'user':
+                                return 'url(#lightPurpleGradient)';
+                            case 'track':
+                                return 'url(#blueGradient)';
+                            default:
+                                return 'black';
+                        }
+                    })                    
+                    .style('stroke-width', 3)
+                    .style('opacity', d => {
+                        if (d.transformed == true){
+                            return 1;
+                        } else {
+                            return 0;
+                        }
+                    });
+
+                circle.transition()
+                    .duration(1000)
+                    .style('opacity', 1)
+                    .attr("r", function(d) { return d.size + 5; });  // Set the circle radius
 
                 
                 nodeGroups.selectAll('image')
@@ -213,14 +332,79 @@ function getFirstNode(username) {
                 .attr('x2', '100%')
                 .attr('y2', '0%');
             
-                // Define the color stops of the gradient
+                // Define the color stops of the progress bar gradient
                 gradient.append('stop')
                 .attr('offset', '0%')
-                .attr('stop-color', '#A9A9A9');
+                .attr('stop-color', 'MediumPurple');  // Lighter purple
             
                 gradient.append('stop')
-                    .attr('offset', '100%')
-                    .attr('stop-color', '#C0C0C0');
+                .attr('offset', '100%')
+                .attr('stop-color', 'Indigo');
+
+                var deepLightPurpleGradient = svg.append("defs")
+                .append("linearGradient")
+                .attr("id", "deepLightPurpleGradient")
+                .attr("x1", "0%")
+                .attr("y1", "0%")
+                .attr("x2", "100%")
+                .attr("y2", "100%");
+
+                deepLightPurpleGradient.append("stop")
+                .attr("offset", "0%")
+                .attr("stop-color", "MediumPurple");
+
+                deepLightPurpleGradient.append("stop")
+                .attr("offset", "100%")
+                .attr("stop-color", "Purple");
+                
+                var deepLightBlueGradient = svg.append("defs")
+                .append("linearGradient")
+                .attr("id", "deepLightBlueGradient")
+                .attr("x1", "0%")
+                .attr("y1", "0%")
+                .attr("x2", "100%")
+                .attr("y2", "100%");
+
+                deepLightBlueGradient.append("stop")
+                .attr("offset", "0%")
+                .attr("stop-color", "DodgerBlue");
+
+                deepLightBlueGradient.append("stop")
+                .attr("offset", "100%")
+                .attr("stop-color", "MidnightBlue");
+
+                // Deeper pink gradient
+                var deepPinkGradient = svg.append("defs")
+                .append("linearGradient")
+                .attr("id", "deepPinkGradient")
+                .attr("x1", "0%")
+                .attr("y1", "0%")
+                .attr("x2", "100%")
+                .attr("y2", "100%");
+
+                deepPinkGradient.append("stop")
+                .attr("offset", "0%")
+                .attr("stop-color", "DeepPink");
+
+                deepPinkGradient.append("stop")
+                .attr("offset", "100%")
+                .attr("stop-color", "MediumVioletRed");
+
+                var deepBlueGradient = svg.append("defs")
+                .append("linearGradient")
+                .attr("id", "deepBlueGradient")
+                .attr("x1", "0%")
+                .attr("y1", "0%")
+                .attr("x2", "100%")
+                .attr("y2", "100%");
+
+                deepBlueGradient.append("stop")
+                .attr("offset", "0%")
+                .attr("stop-color", "RoyalBlue");
+
+                deepBlueGradient.append("stop")
+                .attr("offset", "100%")
+                .attr("stop-color", "Navy");
 
                 const progressBar = d3.select(this).append('path')
                     .attr('class', 'progress-bar')
@@ -228,18 +412,29 @@ function getFirstNode(username) {
                     .attr('transform', `translate(${d.x}, ${d.y})`) // Position the circle
                     .attr('stroke-width', 5)
                     .attr('fill', 'none')
-                    .attr('stroke', 'url(#gradient)');
-                
+                    .attr('stroke', () => {
+                        switch(d.type) {
+                            case 'user':
+                                return 'url(#deepLightPurpleGradient)';
+                            case 'tag':
+                                return 'url(#deepLightBlueGradient)';
+                            case 'artist':
+                                return 'url(#deepPinkGradient)';
+                            default:
+                                return 'url(#deepBlueGradient)';
+                        }
+                    });
+                                
                     let progressBarDuration;
 
                     if (d.type == 'user') {
-                        progressBarDuration = 20000; // Duration for the progress bar
+                        progressBarDuration = 13000; // Duration for the progress bar
                     }
                     else if (d.type == 'tag') {    
-                        progressBarDuration = 4000; // Duration for the progress bar
+                        progressBarDuration = 6000; // Duration for the progress bar
                     }
                     else if (d.type == 'artist') {
-                        progressBarDuration = 8000; // Duration for the progress bar
+                        progressBarDuration = 6200; // Duration for the progress bar
                     }
 
                 
@@ -288,7 +483,8 @@ function getFirstNode(username) {
                                             x: d.x + Math.cos(angle) * 100,
                                             y: d.y + Math.sin(angle) * 100,
                                             imageURL: "https://drive.google.com/uc?id=16NKs6mWVua2sPqaDsaj7qo-oNyw36Yjs", //need to change
-                                            transformed: false,
+                                            transformed: false, 
+                                            parent: d,
                                             clickable: true
                                         };
                                         nodes.push(newNode);
@@ -311,6 +507,7 @@ function getFirstNode(username) {
                                     y: d.y + Math.sin(angle) * 100,
                                     imageURL: "https://drive.google.com/uc?id=1HZ0V0q1x3iVlYMeF3M_245CEu6LZAg2G", //need to change
                                     transformed: false,
+                                    parent: d,
                                     clickable: true
                                 };
                                 nodes.push(newNode);
@@ -348,7 +545,7 @@ function getFirstNode(username) {
                             let fetchPromises = ten_songs.map((song, i) => {
                                 let track = song['track_name'];
                                 let artist = song['artist_name'];
-                                let parentAngle = Math.atan2(d.y - height / 2 , d.x - width / 2);
+                                let parentAngle = Math.atan2(d.y - d.parent.y , d.x - d.parent.x);
                                 let angle = angleIncrement * i + parentAngle - Math.PI / 2;
                             
                                 return fetch(`/get_track_image/${encodeURIComponent(artist)}/${encodeURIComponent(track)}`)
@@ -363,6 +560,7 @@ function getFirstNode(username) {
                                             x: d.x + Math.cos(angle) * 100,
                                             y: d.y + Math.sin(angle) * 100,
                                             imageURL: data,
+                                            parent: d,
                                             clickable: true
                                         };
                 
@@ -402,7 +600,7 @@ function getFirstNode(username) {
                                 console.log(song)
                             
                                 // Calculate the angle of the parent node relative to the center of the circle
-                                let parentAngle = Math.atan2(d.y - height / 2 , d.x - width / 2);
+                                let parentAngle = Math.atan2(d.y - d.parent.y , d.x - d.parent.x);
                                 console.log(parentAngle)
 
                             
@@ -420,6 +618,7 @@ function getFirstNode(username) {
                                             x: d.x + Math.cos(angle) * 100,
                                             y: d.y + Math.sin(angle) * 100,
                                             imageURL: data,
+                                            parent: d,
                                             clickable: true
                                         };
                 
@@ -455,7 +654,7 @@ function getFirstNode(username) {
                             
                             // add artists into node
                             let angleIncrement = (Math.PI) / (artist.length + tag.length); // Distribute nodes evenly in a circle
-                            let parentAngle = Math.atan2(d.y - height / 2 , d.x - width / 2);
+                            let parentAngle = Math.atan2(d.y - d.parent.y , d.x - d.parent.x);
                             for (let i = 0; i < artist.length; i++) {
                                 console.log(artist[i]);
                                 let angle = angleIncrement * i + parentAngle - Math.PI / 2; // angle for this node
@@ -467,7 +666,8 @@ function getFirstNode(username) {
                                     x: d.x + Math.cos(angle) * 100,
                                     y: d.y + Math.sin(angle) * 100,
                                     imageURL: "https://drive.google.com/uc?id=16NKs6mWVua2sPqaDsaj7qo-oNyw36Yjs", //need to change
-                                    transformed: false,
+                                    transformed: false, 
+                                    parent: d,
                                     clickable: true
                                 };
                                 nodes.push(newNode);
@@ -475,7 +675,7 @@ function getFirstNode(username) {
                             }
                             for (let i = 0; i < tag.length; i++) {
                                 console.log(tag[i]);
-                                let angle = angleIncrement * (i + artist.length); // angle for this node
+                                let angle = angleIncrement * (i + artist.length) + parentAngle - Math.PI / 2; // angle for this node
                                 let newNode = {
                                     type: 'tag',
                                     id: `${tag[i]}`,
@@ -484,7 +684,8 @@ function getFirstNode(username) {
                                     x: d.x + Math.cos(angle) * 100,
                                     y: d.y + Math.sin(angle) * 100,
                                     imageURL: "https://drive.google.com/uc?id=1HZ0V0q1x3iVlYMeF3M_245CEu6LZAg2G", //need to change
-                                    transformed: false,
+                                    transformed: false, 
+                                    parent: d,
                                     clickable: true
                                 };
                                 nodes.push(newNode);
@@ -535,6 +736,11 @@ function getFirstNode(username) {
                 nodeGroups.select('text')
                     .attr('x', d => d.x)
                     .attr('y', d => d.y + d.size + 15);
+                    
+                nodeGroups.select('circle')
+                    .attr('cx', d => d.x)
+                    .attr('cy', d => d.y);
+
 
 
                 nodeGroups.select('.progress-bar')
