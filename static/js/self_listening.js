@@ -685,6 +685,7 @@ function getFirstNode(username) {
                         .then(data => {
                             artist = data['artist']
                             tag = data['tag']
+                            console.log(artist)
 
                             // make artist unique
                             artist = [...new Set(artist)]
