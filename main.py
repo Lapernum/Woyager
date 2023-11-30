@@ -79,9 +79,12 @@ def get_data(username):
     data = calculate(username)  
     return jsonify(data)
 
-@app.route('/clear_explored_users', methods=['POST']) #hard code first
-def clear_explored_users():
-    user_id = session.get('user_id')
+@app.route('/clear_explored_users/<username>', methods=['POST']) #hard code first
+def clear_explored_users(username):
+    user_id = database.get_user_id(username)
+
+    if user_id is not None:
+        session['user_id'] = user_id
 
     session['explored_user'] = []  # Clear explored_user in session
     if user_id is not None:

@@ -9,13 +9,15 @@ console.log(width);
 console.log(height)
 
 window.onload = function() {
+    let url_elements = window.location.href.split("/");
+    let username = url_elements[url_elements.length - 1];
     document.getElementById("b-color-pink").style.setProperty("z-index", "-10");
     document.getElementById("background-title").style.setProperty("opacity", "0.1");
     document.getElementById("background-title").style.setProperty("transform", "none");
     document.getElementById("navigation_select").value = "similar_user";
     document.getElementById("background-title").innerHTML = "SIMILAR<br />USER";
     document.getElementById("b-color").style.setProperty("opacity", "1");
-    fetch('/clear_explored_users', {
+    fetch(`/clear_explored_users/${username}`, {
         method: 'POST',
     })
     .then(response => response.json())
