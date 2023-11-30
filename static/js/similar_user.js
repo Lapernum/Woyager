@@ -52,7 +52,7 @@ function getFirstNode(username) {
     fetch(`/get_user_image/${username}`)
         .then(response => response.json())
         .then(data => {
-            nodes.push({ id: username, size: 30, fx: width / 2, fy: height / 2, imageURL: data, transformed: false, first: true})
+            nodes.push({ id: username, size: 30, fx: width / 2, fy: height / 2, imageURL: data, transformed: false, clickable: true, first: true })
 
             let linkSelection = svg.selectAll('.link');
             let nodeGroups = svg.selectAll('.node-group');
@@ -187,10 +187,8 @@ function getFirstNode(username) {
                     })
                     .on('click', (event, d) => {
                         // Using a direct call to window.open to avoid any delays
-
                         window.open(`https://www.last.fm/user/${d.id}`, '_blank');
                         event.stopPropagation(); // Stop the click event from bubbling up to the parent node group
-
                     });
                 
                     nodeGroups.selectAll('text')
@@ -229,7 +227,9 @@ function getFirstNode(username) {
             function expandNode(event, d) {
                 // Prevent the simulation from moving nodes around when adding new ones
                 simulation.stop();
-
+                if (!d.clickable) return;
+                // each node only clickable once
+                d.clickable = false;
                 if (isFetching) return;  // If a fetch operation is in progress, ignore the event
 
                 isFetching = true;
@@ -369,6 +369,9 @@ function getFirstNode(username) {
                             }
 
 
+
+                            nodes.push(newNode);
+                            links.push({ source: d.id, target: newNode.id });
                         }
 
                         // After the fetch operation is complete, hide the progress bar and clear the flag

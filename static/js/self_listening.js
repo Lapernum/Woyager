@@ -55,7 +55,7 @@ function getFirstNode(username) {
     fetch(`/get_user_image/${username}`)
         .then(response => response.json())
         .then(data => {
-            nodes.push({ type: 'user', id: username, size: 30, fx: width / 2, fy: height / 2, imageURL: data, transformed: false })
+            nodes.push({ type: 'user', id: username, size: 30, fx: width / 2, fy: height / 2, imageURL: data, transformed: false, clickable: true })
 
             let linkSelection = svg.selectAll('.link');
             let nodeGroups = svg.selectAll('.node-group');
@@ -288,6 +288,7 @@ function getFirstNode(username) {
 
                 // Add click event to nodeGroups
                 nodeGroups.on('click', expandNode);
+                // nodeGroups.on('click', function(e, d) { expandNode(e, d) });
 
                 // Update the link selection
                 linkSelection = svg.selectAll('.link')
@@ -307,9 +308,10 @@ function getFirstNode(username) {
             function expandNode(event, d) {
                 // Prevent the simulation from moving nodes around when adding new ones
                 simulation.stop();
-
+                if (!d.clickable) return;
                 if (isFetching) return;  // If a fetch operation is in progress, ignore the event
-
+                // only clickable once
+                d.clickable = false;
                 isFetching = true;
                 document.getElementById('progress-bar').style.display = 'block';  // Show the progress bar
 
@@ -482,7 +484,8 @@ function getFirstNode(username) {
                                             y: d.y + Math.sin(angle) * 100,
                                             imageURL: "https://drive.google.com/uc?id=16NKs6mWVua2sPqaDsaj7qo-oNyw36Yjs", //need to change
                                             transformed: false, 
-                                            parent: d
+                                            parent: d,
+                                            clickable: true
                                         };
                                         nodes.push(newNode);
                                         links.push({ source: d.id, target: newNode.id });
@@ -504,7 +507,8 @@ function getFirstNode(username) {
                                     y: d.y + Math.sin(angle) * 100,
                                     imageURL: "https://drive.google.com/uc?id=1HZ0V0q1x3iVlYMeF3M_245CEu6LZAg2G", //need to change
                                     transformed: false,
-                                    parent: d
+                                    parent: d,
+                                    clickable: true
                                 };
                                 nodes.push(newNode);
                                 links.push({ source: d.id, target: newNode.id });
@@ -556,7 +560,8 @@ function getFirstNode(username) {
                                             x: d.x + Math.cos(angle) * 100,
                                             y: d.y + Math.sin(angle) * 100,
                                             imageURL: data,
-                                            parent: d
+                                            parent: d,
+                                            clickable: true
                                         };
                 
                                         nodes.push(newNode);
@@ -613,7 +618,8 @@ function getFirstNode(username) {
                                             x: d.x + Math.cos(angle) * 100,
                                             y: d.y + Math.sin(angle) * 100,
                                             imageURL: data,
-                                            parent: d
+                                            parent: d,
+                                            clickable: true
                                         };
                 
                                         nodes.push(newNode);
@@ -661,14 +667,15 @@ function getFirstNode(username) {
                                     y: d.y + Math.sin(angle) * 100,
                                     imageURL: "https://drive.google.com/uc?id=16NKs6mWVua2sPqaDsaj7qo-oNyw36Yjs", //need to change
                                     transformed: false, 
-                                    parent: d
+                                    parent: d,
+                                    clickable: true
                                 };
                                 nodes.push(newNode);
                                 links.push({ source: d.id, target: newNode.id });
                             }
                             for (let i = 0; i < tag.length; i++) {
                                 console.log(tag[i]);
-                                let angle = angleIncrement * (i + artist.length); // angle for this node
+                                let angle = angleIncrement * (i + artist.length) + parentAngle - Math.PI / 2; // angle for this node
                                 let newNode = {
                                     type: 'tag',
                                     id: `${tag[i]}`,
@@ -678,7 +685,8 @@ function getFirstNode(username) {
                                     y: d.y + Math.sin(angle) * 100,
                                     imageURL: "https://drive.google.com/uc?id=1HZ0V0q1x3iVlYMeF3M_245CEu6LZAg2G", //need to change
                                     transformed: false, 
-                                    parent: d
+                                    parent: d,
+                                    clickable: true
                                 };
                                 nodes.push(newNode);
                                 links.push({ source: d.id, target: newNode.id });
