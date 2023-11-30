@@ -181,7 +181,7 @@ def get_artist_image(artist):
     return jsonify(data)
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
 
 
 

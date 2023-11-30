@@ -12,11 +12,16 @@ window.onload = function() {
     let url_elements = window.location.href.split("/");
     let username = url_elements[url_elements.length - 1];
     document.getElementById("b-color-pink").style.setProperty("z-index", "-10");
+    document.getElementById("b-color-pink").style.setProperty("opacity", "0");
     document.getElementById("background-title").style.setProperty("opacity", "0.1");
     document.getElementById("background-title").style.setProperty("transform", "none");
     document.getElementById("navigation_select").value = "similar_user";
     document.getElementById("background-title").innerHTML = "SIMILAR<br />USER";
     document.getElementById("b-color").style.setProperty("opacity", "1");
+    document.getElementById("instruction").style.setProperty("z-index", "11");
+    document.getElementById("instruction").style.setProperty("opacity", "0.8");
+    document.getElementById("totop").style.setProperty("opacity", "0.8");
+    document.getElementById("totop").style.setProperty("z-index", "11");
     fetch(`/clear_explored_users/${username}`, {
         method: 'POST',
     })
@@ -35,6 +40,8 @@ window.onload = function() {
 let nodes = [];
 
 function navigateTo(page) {
+    document.getElementById("instruction").style.setProperty("opacity", "0");
+    document.getElementById("totop").style.setProperty("opacity", "0");
     document.getElementById("b-color").style.setProperty("opacity", "0");
     document.getElementById("b-color-pink").style.setProperty("z-index", "10");
     document.body.style.setProperty("background", "rgb(225, 211, 230)");
@@ -456,6 +463,19 @@ function getFirstNode(username) {
             // Initial update call
             update();
         });
+}
+
+function instructionSwitch() {
+    let instruction_but = document.getElementById("instruction");
+    if (instruction_but.innerHTML == "How to use?") {
+        instruction_but.innerHTML = "Welcome to <b>Similar User</b> mode!<br /><b>Click on Avatars</b> to expand the tree to find users similar to you<br /><b>Click on the names</b> to jump to last.fm if you're interested!<br />Enjoy!!";
+    } else {
+        instruction_but.innerHTML = "How to use?";
+    }
+}
+
+function scroll_Top() {
+    window.scrollTo({top: 0, left: 0, behavior: 'smooth'});
 }
 
 url_elements = window.location.href.split("/");

@@ -21,8 +21,10 @@ function startLogin() {
                 document.getElementById('username_input').value = ""
                 document.getElementById('username_input').placeholder = "Username not found :("
             } else {
+                document.getElementById("b-color-pink").style.setProperty("z-index", "10");
                 document.body.style.setProperty("background", "rgb(225, 211, 230)");
                 document.getElementById("b-color").style.setProperty("opacity", "0");
+                document.getElementById("b-color-pink").style.setProperty("opacity", "1");
                 setTimeout(function()
                     {
                         const currentUrl = window.location.href;
