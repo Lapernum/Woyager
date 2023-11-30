@@ -15,6 +15,42 @@ window.onload = function() {
     document.getElementById("navigation_select").value = "self_listening";
     document.getElementById("background-title").innerHTML = "SELF<br />LISTENING";
     document.getElementById("b-color").style.setProperty("opacity", "1");
+    var types = [
+        {type: 'tag', color: 'url(#lightBlueGradient)'},
+        {type: 'artist', color: 'url(#pinkGradient)'},
+        {type: 'user', color: 'url(#lightPurpleGradient)'},
+        {type: 'track', color: 'url(#blueGradient)'},
+    ];
+    
+    var legend = svg.selectAll('.legend')
+    .data(types)
+    .enter().append('g')
+    .attr('class', 'legend')
+    .attr('transform', function(d, i) { return 'translate(-20,' + (i * 30 + 20) + ')'; })
+    .style('opacity', 0); // initially set the opacity to 0
+
+    // Transition the opacity to 1 over 1 second
+    legend.transition()
+        .duration(1000)
+        .style('opacity', 1);
+
+    // Append a circle to each g
+    legend.append('circle')
+        .attr('cx', width - 18)
+        .attr('r', 12)
+        .style('fill', 'none') // make the circle hollow
+        .style('stroke', d => d.color) // color the circle's outline
+        .style('stroke-width', 3);
+
+    // Apply the filter to your text
+    legend.append('text')
+        .attr('x', width - 35)
+        .attr('y', 4)
+        .attr('dy', '.35em')
+        .style('text-anchor', 'end')
+        .style('fill', 'white')
+        .style('font-size', '15px')
+        .text(d => d.type);
 }
 
 function navigateTo(page) {
@@ -75,6 +111,7 @@ function getFirstNode(username) {
 
             // Function to update the visualization
             function update() {
+
                 // Join the updated nodes data to the groups
                 nodeGroups = svg.selectAll('.node-group')
                     .data(nodes, d => d.id)
@@ -185,7 +222,7 @@ function getFirstNode(username) {
                         } else {
                             return 0;
                         }
-                    });
+                    })
 
                 circle.transition()
                     .duration(1000)
