@@ -10,14 +10,19 @@
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@100;300;400;500;700;900&family=Outfit:wght@100;200;300;400;500;600;700;800;900&display=swap');
 
         body {
-        background: linear-gradient(to bottom, rgb(159, 211, 233) 0%, rgb(185, 221, 232) 30%, rgb(225, 211, 230) 100%);
-        background-attachment: fixed;
-        background-repeat: no-repeat;
-        background-size: cover;
-        color: #333;
-        margin: 0;
-        padding: 0;
-        font-family: 'Arial', sans-serif;
+            font-family: 'Outfit', sans-serif;
+            background: rgb(225, 211, 230);
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            background-size: cover;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            transition:
+                width 2s,
+                height 2s,
+                background-color 2s,
+                rotate 2s;
         }
         @keyframes float {
             0%, 100% {
@@ -26,6 +31,34 @@
             50% {
                 transform: translateY(-20px); /* Adjust this value to control the floating range */
             }
+        }
+
+        #b-color {
+            background: linear-gradient(to bottom, rgb(225, 211, 230) 0%, rgb(185, 221, 232) 70%, rgb(159, 211, 233) 100%);
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            background-size: cover;
+            position: fixed;
+            opacity: 0;
+            height: 100vh;
+            width: 100vw;
+            transition-duration: 3s;
+            transition-timing-function: cubic-bezier(0.83,-0.02, 0.5, 1);
+            z-index: -2;
+        }
+
+        #b-color-pink {
+            background: rgb(225, 211, 230);
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            background-size: cover;
+            position: fixed;
+            opacity: 0;
+            height: 100vh;
+            width: 100vw;
+            transition-duration: 3s;
+            transition-timing-function: cubic-bezier(0.28, 0.01, 0.5, 1);
+            z-index: -10;
         }
 
         .cloud {
@@ -140,8 +173,23 @@
             animation: progress-bar 2s linear infinite;
         }
 
-
-
+        #background-title {
+            position: fixed;
+            font-size: 12rem;
+            font-weight: 900;
+            text-anchor: middle;
+            top: calc(50% - 20rem);
+            left: 0;
+            color: #2c657b;
+            line-height: 80%;
+            pointer-events: none;
+            transition-delay: 0ms;
+            transition-duration: 2s;
+            opacity: 0;
+            transform: translateY(-50px);
+            transition-timing-function: cubic-bezier(0.6,-0.03, 0.28, 0.97);
+            z-index: -1;
+        }
 
         @keyframes progress-bar {
             0% { background-position: 200% 0; }
@@ -162,6 +210,7 @@
             background: linear-gradient(to right, #5fa8d3, #3f87a6);
             cursor: pointer;
             transition: background-color 0.3s ease;
+            z-index: 11;
         }
 
         #navigation_select:hover {
@@ -176,6 +225,9 @@
     </style>
 </head>
 <body>
+    <div id="b-color"></div>
+    <div id="b-color-pink"></div>
+
     <div class="cloud" id="cloud1"></div>
     <div class="cloud" id="cloud2"></div>
     <div class="cloud" id="cloud3"></div>
@@ -183,10 +235,12 @@
     <div id="progress-bar"></div>
 
     <select id="navigation_select" onchange="navigateTo(this.value)">
-        <option value="" disabled selected>Select Mode</option>
+        <!-- <option value="" disabled selected>Select Mode</option> -->
         <option value="self_listening">Self Listening</option>
         <option value="similar_user">Similar User</option>
     </select>
+
+    <p id="background-title"></p>
 
     <script src="/static/js/similar_user.js"></script>
 </body>

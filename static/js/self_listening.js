@@ -8,12 +8,28 @@ const svg = d3.select('#visualization').append('svg')
 
 let nodes = [];
 
+window.onload = function() {
+    document.getElementById("b-color-pink").style.setProperty("z-index", "-10");
+    document.getElementById("background-title").style.setProperty("opacity", "0.1");
+    document.getElementById("background-title").style.setProperty("transform", "none");
+    document.getElementById("navigation_select").value = "self_listening";
+    document.getElementById("background-title").innerHTML = "SELF<br />LISTENING";
+    document.getElementById("b-color").style.setProperty("opacity", "1");
+}
+
 function navigateTo(page) {
-    if (page) {
-        url_elements = window.location.href.split("/");
-        let username = url_elements[url_elements.length - 1];
-        window.location.href = window.location.origin + '/' + page + '/' + username;
-    }
+    document.getElementById("b-color").style.setProperty("opacity", "0");
+    document.getElementById("b-color-pink").style.setProperty("z-index", "10");
+    document.body.style.setProperty("background", "rgb(225, 211, 230)");
+    document.getElementById("b-color-pink").style.setProperty("opacity", "1");
+    setTimeout(function()
+        {
+            if (page) {
+                url_elements = window.location.href.split("/");
+                let username = url_elements[url_elements.length - 1];
+                window.location.href = window.location.origin + '/' + page + '/' + username;
+            }
+        }, 3000);
 }
 
 function getFirstNode(username) {
@@ -30,7 +46,7 @@ function getFirstNode(username) {
     fetch(`/get_user_image/${username}`)
         .then(response => response.json())
         .then(data => {
-            nodes.push({ type: 'user', id: username, size: 30, fx: width / 2, fy: height / 2, imageURL: data })
+            nodes.push({ type: 'user', id: username, size: 30, fx: width / 2, fy: height / 2, imageURL: data, transformed: false })
 
             let linkSelection = svg.selectAll('.link');
             let nodeGroups = svg.selectAll('.node-group');
@@ -38,6 +54,8 @@ function getFirstNode(username) {
             let links = [];
 
             let isFetching = false;
+
+            let newAddedNode = [];
 
             console.log(nodes)
 
@@ -59,14 +77,43 @@ function getFirstNode(username) {
                 nodeGroups.selectAll('image')
                     .data(d => [d]) // Pass the parent node data down to the children
                     .join('image')
+                    .attr('id', d => d.id)
                     .attr('class', 'node')
                     .attr('xlink:href', d => d.imageURL) // Set the image URL
                     .attr('x', d => -d.size) // Center the image horizontally
                     .attr('y', d => -d.size) // Center the image vertically
+                    .attr('height', d => {
+                        if (d.transformed == true) {
+                            return d.size * 2;
+                        } else {
+                            return d.size;
+                        }
+                    }) // Set the image height
+                    .attr('width', d => {
+                        if (d.transformed == true) {
+                            return d.size * 2;
+                        } else {
+                            return d.size;
+                        }
+                    }) // Set the image width
+                    .style('pointer-events', 'none')
+                    .style('clip-path', 'circle(50%)') // Make the image circular
+                    .style('opacity', d => {
+                        if (d.transformed == true){
+                            return 1;
+                        } else {
+                            return 0;
+                        }
+                    });
+                
+                nodeGroups.selectAll('image')
+                    .data(d => [d])
+                    .transition()
+                    .duration(1000)
+                    .style('opacity', 1)
+                    .style('pointer-events', 'all')
                     .attr('height', d => d.size * 2) // Set the image height
-                    .attr('width', d => d.size * 2) // Set the image width
-                    .style('clip-path', 'circle(50%)'); // Make the image circular
-
+                    .attr('width', d => d.size * 2); // Set the image width
 
                 nodeGroups.selectAll('text')
                     .data(d => [d])
@@ -81,6 +128,13 @@ function getFirstNode(username) {
                     .style('font-size', '1rem')
                     .style('font-weight', 'bold')
                     .style('pointer-events', 'all') // Make sure the text element is clickable
+                    .style('opacity', d => {
+                        if (d.transformed == true) {
+                            return 1;
+                        } else {
+                            return 0;
+                        }
+                    })
                     .on('click', (event, d) => {
                         // Using a direct call to window.open to avoid any delays
                         console.log(d)
@@ -99,6 +153,17 @@ function getFirstNode(username) {
                         event.stopPropagation(); // Stop the click event from bubbling up to the parent node group
 
                     });
+                
+                    nodeGroups.selectAll('text')
+                        .data(d => [d])
+                        .transition()
+                        .duration(1000)
+                        .delay(500)
+                        .style('opacity', 1);
+
+                    for (let i = 0; i < nodes.length; i++) {
+                        nodes[i].transformed = true;
+                    }
 
                 nodeGroups.style('cursor', 'pointer');
 
@@ -109,7 +174,10 @@ function getFirstNode(username) {
                 linkSelection = svg.selectAll('.link')
                     .data(links)
                     .join('line')
-                    .attr('class', 'link');
+                    .attr('class', 'link')
+                    .style('opacity', 0.5)
+                    .style('stroke-width', 1)
+                    .style('stroke', '#335778');
 
                 // Update and restart the simulation
                 simulation.nodes(nodes);
@@ -217,7 +285,8 @@ function getFirstNode(username) {
                                             // Calculate the x, y position based on angle and a fixed radius
                                             x: d.x + Math.cos(angle) * 100,
                                             y: d.y + Math.sin(angle) * 100,
-                                            imageURL: "https://drive.google.com/uc?id=16NKs6mWVua2sPqaDsaj7qo-oNyw36Yjs" //need to change
+                                            imageURL: "https://drive.google.com/uc?id=16NKs6mWVua2sPqaDsaj7qo-oNyw36Yjs", //need to change
+                                            transformed: false
                                         };
                                         nodes.push(newNode);
                                         links.push({ source: d.id, target: newNode.id });
@@ -237,7 +306,8 @@ function getFirstNode(username) {
                                     // Calculate the x, y position based on angle and a fixed radius
                                     x: d.x + Math.cos(angle) * 100,
                                     y: d.y + Math.sin(angle) * 100,
-                                    imageURL: "https://drive.google.com/uc?id=1HZ0V0q1x3iVlYMeF3M_245CEu6LZAg2G" //need to change
+                                    imageURL: "https://drive.google.com/uc?id=1HZ0V0q1x3iVlYMeF3M_245CEu6LZAg2G", //need to change
+                                    transformed: false
                                 };
                                 nodes.push(newNode);
                                 links.push({ source: d.id, target: newNode.id });
@@ -390,7 +460,8 @@ function getFirstNode(username) {
                                     // Calculate the x, y position based on angle and a fixed radius
                                     x: d.x + Math.cos(angle) * 100,
                                     y: d.y + Math.sin(angle) * 100,
-                                    imageURL: "https://drive.google.com/uc?id=16NKs6mWVua2sPqaDsaj7qo-oNyw36Yjs" //need to change
+                                    imageURL: "https://drive.google.com/uc?id=16NKs6mWVua2sPqaDsaj7qo-oNyw36Yjs", //need to change
+                                    transformed: false
                                 };
                                 nodes.push(newNode);
                                 links.push({ source: d.id, target: newNode.id });
@@ -405,7 +476,8 @@ function getFirstNode(username) {
                                     // Calculate the x, y position based on angle and a fixed radius
                                     x: d.x + Math.cos(angle) * 100,
                                     y: d.y + Math.sin(angle) * 100,
-                                    imageURL: "https://drive.google.com/uc?id=1HZ0V0q1x3iVlYMeF3M_245CEu6LZAg2G" //need to change
+                                    imageURL: "https://drive.google.com/uc?id=1HZ0V0q1x3iVlYMeF3M_245CEu6LZAg2G", //need to change
+                                    transformed: false
                                 };
                                 nodes.push(newNode);
                                 links.push({ source: d.id, target: newNode.id });

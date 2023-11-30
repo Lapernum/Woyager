@@ -9,7 +9,7 @@ from Data.data_api import *
 from backend.user.utils import *
 from scipy.spatial import distance
 
-CONF_PATH = '/Users/ziandong/TreeMusicRecommendation/backend/conf.json'
+CONF_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../Data/conf.json')
 
 def concatenate_feature_csvs(feature):
     # Get the directory of the current script
