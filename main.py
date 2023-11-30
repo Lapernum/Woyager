@@ -11,7 +11,13 @@ from flask import render_template
 from urllib.parse import unquote
 import copy
 from flask import Flask, jsonify, session  # Import session
+import psutil
 
+def log_system_usage():
+    cpu_usage = psutil.cpu_percent()
+    memory_usage = psutil.virtual_memory().used
+    print(f'CPU usage: {cpu_usage}%')
+    print(f'Memory usage: {memory_usage / (1024.0 ** 3)} GB')  # Convert to GB
 
 app = Flask(__name__)
 app.secret_key = 'your secret key'  # Initialize the secret key
@@ -20,17 +26,20 @@ app.secret_key = 'your secret key'  # Initialize the secret key
 last_fm = lastfm_api('./Data/conf.json')
 database = database_api('./Data/conf.json')
 
-top_tags_df = concatenate_feature_csvs("Top Tags")
-top_tags_df = top_tags_df.fillna(0)
-print(1)
+# top_tags_df = concatenate_feature_csvs("Top Tags")
+# top_tags_df = top_tags_df.fillna(0)
+# print(1)
+# log_system_usage()
 
-top_artists_df = concatenate_feature_csvs("Top Artists")
-top_artists_df = top_artists_df.fillna(0)
-print(2)
+# top_artists_df = concatenate_feature_csvs("Top Artists")
+# top_artists_df = top_artists_df.fillna(0)
+# print(2)
+# log_system_usage()
 
-top_tracks_df = concatenate_feature_csvs("Top Tracks")
-top_tracks_df = top_tracks_df.fillna(0)
-print(3)
+# top_tracks_df = concatenate_feature_csvs("Top Tracks")
+# top_tracks_df = top_tracks_df.fillna(0)
+# print(3)
+# log_system_usage()
 
 # top tags_df = pd.read_csv('backend/user/Top Tags_0.csv')
 # top artists_df = pd.read_csv('backend/user/Top Artists_0.csv')
