@@ -23,6 +23,7 @@ window.onload = function() {
     .catch((error) => {
         console.error('Error:', error);
     });
+
 };
 
 // let nodes = [
@@ -51,7 +52,7 @@ function getFirstNode(username) {
     fetch(`/get_user_image/${username}`)
         .then(response => response.json())
         .then(data => {
-            nodes.push({ id: username, size: 30, fx: width / 2, fy: height / 2, imageURL: data, transformed: false })
+            nodes.push({ id: username, size: 30, fx: width / 2, fy: height / 2, imageURL: data, transformed: false, first: true})
 
             let linkSelection = svg.selectAll('.link');
             let nodeGroups = svg.selectAll('.node-group');
@@ -75,6 +76,52 @@ function getFirstNode(username) {
                     .join('g')
                     .attr('class', 'node-group')
                     .call(drag);
+                
+                var gradient = svg.append("defs")
+                    .append("linearGradient")
+                    .attr("id", "pinkGradient")
+                    .attr("x1", "0%")
+                    .attr("y1", "0%")
+                    .attr("x2", "100%")
+                    .attr("y2", "100%");
+
+                    gradient.append("stop")
+                    .attr("offset", "0%")
+                    .attr("stop-color", "LightPink");
+
+                    gradient.append("stop")
+                    .attr("offset", "100%")
+                    .attr("stop-color", "DeepPink");
+
+                var circle = nodeGroups.selectAll('circle')
+                    .data(d => [d]) // Pass the parent node data down to the children
+                    .join('circle')
+                    .attr('class', 'node-circle')
+                    .attr('cx', d => d.x) // Position the circle at the node's center
+                    .attr('cy', d => d.y)
+                    .attr("r", function(d) { 
+                        if (d.transformed == true) {
+                            return d.size  + 5;
+                        } else {
+                            return d.size/2 + 5;
+                        }
+                    }) 
+                    .style('fill', 'none') // No fill for hollow effect
+                    .style('stroke', 'url(#pinkGradient)') // Light purple stroke color                    
+                    .style('stroke-width', 2)
+                    .style('opacity', d => {
+                        if (d.transformed == true){
+                            return 1;
+                        } else {
+                            return 0;
+                        }
+                    });
+
+                circle.transition()
+                    .duration(1000)
+                    .style('opacity', 1)
+                    .attr("r", function(d) { return d.size + 5; });  // Set the circle radius
+
 
                 
                 nodeGroups.selectAll('image')
@@ -140,19 +187,8 @@ function getFirstNode(username) {
                     })
                     .on('click', (event, d) => {
                         // Using a direct call to window.open to avoid any delays
-                        console.log(d)
-                        if (d.type == 'tag') {
-                            window.open(`https://www.last.fm/tag/${d.id}`, '_blank');
-                        }
-                        else if (d.type == 'artist') {
-                            window.open(`https://www.last.fm/artist/${d.id}`, '_blank');
-                        }
-                        else if (d.type == 'user') {
-                            window.open(`https://www.last.fm/user/${d.id}`, '_blank');
-                        }
-                        else {
-                            window.open(`https://www.last.fm/music/${d.artist}/_/${d.track}`, '_blank')
-                        }
+
+                        window.open(`https://www.last.fm/user/${d.id}`, '_blank');
                         event.stopPropagation(); // Stop the click event from bubbling up to the parent node group
 
                     });
@@ -219,12 +255,14 @@ function getFirstNode(username) {
             
                 // Define the color stops of the gradient
                 gradient.append('stop')
-                .attr('offset', '0%')
-                .attr('stop-color', '#A9A9A9');
+                .attr("offset", "0%")
+                .attr("stop-color", "DeepPink");
+
             
                 gradient.append('stop')
-                    .attr('offset', '100%')
-                    .attr('stop-color', '#C0C0C0');
+                .attr("offset", "100%")
+                .attr("stop-color", "MediumVioletRed");
+
 
                 const progressBar = d3.select(this).append('path')
                     .attr('class', 'progress-bar')
@@ -234,7 +272,7 @@ function getFirstNode(username) {
                     .attr('fill', 'none')
                     .attr('stroke', 'url(#gradient)');
 
-                const progressBarDuration = 30000; // Initial duration for the progress bar
+                const progressBarDuration = 32000; // Initial duration for the progress bar
 
 
                 const circumference = 2 * Math.PI * progressBar.attr('r');
@@ -288,22 +326,49 @@ function getFirstNode(username) {
                             return;
                         }        
 
-                        // Logic to add new nodes connected to the clicked node
-                        let angleIncrement = (2 * Math.PI) / 10; // Distribute nodes evenly in a circle
-                        for (let i = 0; i < 7; i++) {
-                            console.log(data[i]);
-                            let angle = angleIncrement * i; // angle for this node
-                            let newNode = {
-                                id: `${data[i].username}`,
-                                size: data[i].similarity_score,
-                                // Calculate the x, y position based on angle and a fixed radius
-                                x: d.x + Math.cos(angle) * 100,
-                                y: d.y + Math.sin(angle) * 100,
-                                imageURL: data[i].imageURL,
-                                transformed: false
-                            };
-                            nodes.push(newNode);
-                            links.push({ source: d.id, target: newNode.id });
+                        if(d.first == true){   
+                            // Logic to add new nodes connected to the clicked node
+                            let angleIncrement = (2 * Math.PI) / 7; // Distribute nodes evenly in a circle
+                            for (let i = 0; i < 7; i++) {
+                                console.log(data[i]);
+                                let angle = angleIncrement * i; // angle for this node
+                                let newNode = {
+                                    id: `${data[i].username}`,
+                                    size: data[i].similarity_score,
+                                    // Calculate the x, y position based on angle and a fixed radius
+                                    x: d.x + Math.cos(angle) * 100,
+                                    y: d.y + Math.sin(angle) * 100,
+                                    imageURL: data[i].imageURL,
+                                    transformed: false,
+                                    first: false,
+                                    parentnode: d
+                                };
+                                nodes.push(newNode);
+                                links.push({ source: d.id, target: newNode.id });
+                            }
+                        } else {
+                            // Logic to add new nodes connected to the clicked node
+                            let angleIncrement =  Math.PI / 5; // Distribute nodes evenly in a half circle
+                            let parentAngle = Math.atan2(d.y - d.parentnode.y , d.x - d.parentnode.x);
+                            for (let i = 0; i < 5; i++) {
+                                console.log(data[i]);
+                                let angle = parentAngle + angleIncrement * i -  Math.PI / 2; // angle for this node
+                                let newNode = {
+                                    id: `${data[i].username}`,
+                                    size: data[i].similarity_score,
+                                    // Calculate the x, y position based on angle and a fixed radius
+                                    x: d.x + Math.cos(angle) * 100,
+                                    y: d.y + Math.sin(angle) * 100,
+                                    imageURL: data[i].imageURL,
+                                    transformed: false,
+                                    first: false,
+                                    parentnode: d
+                                };
+                                nodes.push(newNode);
+                                links.push({ source: d.id, target: newNode.id });
+                            }
+
+
                         }
 
                         // After the fetch operation is complete, hide the progress bar and clear the flag
@@ -349,6 +414,11 @@ function getFirstNode(username) {
                 nodeGroups.select('text')
                     .attr('x', d => d.x)
                     .attr('y', d => d.y + d.size + 15);
+                
+                nodeGroups.select('circle')
+                    .attr('cx', d => d.x)
+                    .attr('cy', d => d.y);
+
 
 
                 nodeGroups.select('.progress-bar')
