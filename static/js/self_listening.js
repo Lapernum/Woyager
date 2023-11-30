@@ -693,34 +693,32 @@ function getFirstNode(username) {
                         .then(data => {
                             artist = data['artist']
                             tag = data['tag']
+                            console.log(artist)
 
                             // make artist unique
-                            artist = [...new Set(artist)]
                             
                             // add artists into node
                             let angleIncrement = (Math.PI) / (artist.length + tag.length); // Distribute nodes evenly in a circle
                             let parentAngle = Math.atan2(d.y - d.parent.y , d.x - d.parent.x);
-                            for (let i = 0; i < artist.length; i++) {
-                                console.log(artist[i]);
-                                let angle = angleIncrement * i + parentAngle - Math.PI / 2; // angle for this node
-                                let newNode = {
-                                    type: 'artist',
-                                    id: `${artist[i]}`,
-                                    size: 30,
-                                    // Calculate the x, y position based on angle and a fixed radius
-                                    x: d.x + Math.cos(angle) * 100,
-                                    y: d.y + Math.sin(angle) * 100,
-                                    imageURL: "https://drive.google.com/uc?id=16NKs6mWVua2sPqaDsaj7qo-oNyw36Yjs", //need to change
-                                    transformed: false, 
-                                    parent: d,
-                                    clickable: true
-                                };
-                                nodes.push(newNode);
-                                links.push({ source: d.id, target: newNode.id });
-                            }
+                            let angle = angleIncrement  + parentAngle - Math.PI / 2; // angle for this node
+                            let newNode = {
+                                type: 'artist',
+                                id: `${artist}`,
+                                size: 30,
+                                // Calculate the x, y position based on angle and a fixed radius
+                                x: d.x + Math.cos(angle) * 100,
+                                y: d.y + Math.sin(angle) * 100,
+                                imageURL: "https://drive.google.com/uc?id=16NKs6mWVua2sPqaDsaj7qo-oNyw36Yjs", //need to change
+                                transformed: false, 
+                                parent: d,
+                                clickable: true
+                            };
+                            nodes.push(newNode);
+                            links.push({ source: d.id, target: newNode.id });
+                        
                             for (let i = 0; i < tag.length; i++) {
                                 console.log(tag[i]);
-                                let angle = angleIncrement * (i + artist.length) + parentAngle - Math.PI / 2; // angle for this node
+                                let angle = angleIncrement * (i + 1) + parentAngle - Math.PI / 2; // angle for this node
                                 let newNode = {
                                     type: 'tag',
                                     id: `${tag[i]}`,

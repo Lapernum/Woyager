@@ -125,7 +125,10 @@ class SelfListening:
         self.added_track_tag = {tag: math.floor((count / max_tag_cnt) * 100) for tag, count in self.added_track_tag.items()}
         temp = sorted(self.added_track_tag.items(), key=lambda x: x[1], reverse=True)
         tar = dict(temp[:4])
-        self.target = {'tag': list(tar.keys()), 'artist': list(set(s['artist_name'] for s in self.added_track))}
+        artist_name = ''.join(list(self.added_track[-1]['artist_name']))
+        print(artist_name)
+
+        self.target = {'tag': list(tar.keys()), 'artist': artist_name}
     
     def update_target(self, prime):
         '''
