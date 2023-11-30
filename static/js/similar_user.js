@@ -341,6 +341,7 @@ function getFirstNode(username) {
                                     imageURL: data[i].imageURL,
                                     transformed: false,
                                     first: false,
+                                    clickable: true,
                                     parentnode: d
                                 };
                                 nodes.push(newNode);
@@ -362,6 +363,7 @@ function getFirstNode(username) {
                                     imageURL: data[i].imageURL,
                                     transformed: false,
                                     first: false,
+                                    clickable: true,
                                     parentnode: d
                                 };
                                 nodes.push(newNode);
@@ -369,9 +371,6 @@ function getFirstNode(username) {
                             }
 
 
-
-                            nodes.push(newNode);
-                            links.push({ source: d.id, target: newNode.id });
                         }
 
                         // After the fetch operation is complete, hide the progress bar and clear the flag
