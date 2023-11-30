@@ -7,10 +7,14 @@ const svg = d3.select('#visualization').append('svg')
 
 console.log(width);
 console.log(height)
-    
-
 
 window.onload = function() {
+    document.getElementById("b-color-pink").style.setProperty("z-index", "-10");
+    document.getElementById("background-title").style.setProperty("opacity", "0.1");
+    document.getElementById("background-title").style.setProperty("transform", "none");
+    document.getElementById("navigation_select").value = "similar_user";
+    document.getElementById("background-title").innerHTML = "SIMILAR<br />USER";
+    document.getElementById("b-color").style.setProperty("opacity", "1");
     fetch('/clear_explored_users', {
         method: 'POST',
     })
@@ -28,11 +32,18 @@ window.onload = function() {
 let nodes = [];
 
 function navigateTo(page) {
-    if (page) {
-        url_elements = window.location.href.split("/");
-        let username = url_elements[url_elements.length - 1];
-        window.location.href = window.location.origin + '/' + page + '/' + username;
-    }
+    document.getElementById("b-color").style.setProperty("opacity", "0");
+    document.getElementById("b-color-pink").style.setProperty("z-index", "10");
+    document.body.style.setProperty("background", "rgb(225, 211, 230)");
+    document.getElementById("b-color-pink").style.setProperty("opacity", "1");
+    setTimeout(function()
+        {
+            if (page) {
+                url_elements = window.location.href.split("/");
+                let username = url_elements[url_elements.length - 1];
+                window.location.href = window.location.origin + '/' + page + '/' + username;
+            }
+        }, 3000);
 }
 
 function getFirstNode(username) {
@@ -40,7 +51,7 @@ function getFirstNode(username) {
     fetch(`/get_user_image/${username}`)
         .then(response => response.json())
         .then(data => {
-            nodes.push({ id: username, size: 30, fx: width / 2, fy: height / 2, imageURL: data })
+            nodes.push({ id: username, size: 30, fx: width / 2, fy: height / 2, imageURL: data, transformed: false })
 
             let linkSelection = svg.selectAll('.link');
             let nodeGroups = svg.selectAll('.node-group');
@@ -65,16 +76,47 @@ function getFirstNode(username) {
                     .attr('class', 'node-group')
                     .call(drag);
 
+                
                 nodeGroups.selectAll('image')
-                .data(d => [d]) // Pass the parent node data down to the children
-                .join('image')
-                .attr('class', 'node')
-                .attr('xlink:href', d => d.imageURL) // Set the image URL
-                .attr('x', d => -d.size) // Center the image horizontally
-                .attr('y', d => -d.size) // Center the image vertically
-                .attr('height', d => d.size * 2) // Set the image height
-                .attr('width', d => d.size * 2) // Set the image width
-                .style('clip-path', 'circle(50%)'); // Make the image circular
+                    .data(d => [d]) // Pass the parent node data down to the children
+                    .join('image')
+                    .attr('id', d => d.id)
+                    .attr('class', 'node')
+                    .attr('xlink:href', d => d.imageURL) // Set the image URL
+                    .attr('x', d => -d.size) // Center the image horizontally
+                    .attr('y', d => -d.size) // Center the image vertically
+                    .attr('height', d => {
+                        if (d.transformed == true) {
+                            return d.size * 2;
+                        } else {
+                            return d.size;
+                        }
+                    }) // Set the image height
+                    .attr('width', d => {
+                        if (d.transformed == true) {
+                            return d.size * 2;
+                        } else {
+                            return d.size;
+                        }
+                    }) // Set the image width
+                    .style('pointer-events', 'none')
+                    .style('clip-path', 'circle(50%)') // Make the image circular
+                    .style('opacity', d => {
+                        if (d.transformed == true){
+                            return 1;
+                        } else {
+                            return 0;
+                        }
+                    });
+                
+                nodeGroups.selectAll('image')
+                    .data(d => [d])
+                    .transition()
+                    .duration(1000)
+                    .style('opacity', 1)
+                    .style('pointer-events', 'all')
+                    .attr('height', d => d.size * 2) // Set the image height
+                    .attr('width', d => d.size * 2); // Set the image width
 
                 nodeGroups.selectAll('text')
                     .data(d => [d])
@@ -89,11 +131,42 @@ function getFirstNode(username) {
                     .style('font-size', '1rem')
                     .style('font-weight', 'bold')
                     .style('pointer-events', 'all') // Make sure the text element is clickable
+                    .style('opacity', d => {
+                        if (d.transformed == true) {
+                            return 1;
+                        } else {
+                            return 0;
+                        }
+                    })
                     .on('click', (event, d) => {
                         // Using a direct call to window.open to avoid any delays
-                        window.open(`https://www.last.fm/user/${d.id}`, '_blank');
+                        console.log(d)
+                        if (d.type == 'tag') {
+                            window.open(`https://www.last.fm/tag/${d.id}`, '_blank');
+                        }
+                        else if (d.type == 'artist') {
+                            window.open(`https://www.last.fm/artist/${d.id}`, '_blank');
+                        }
+                        else if (d.type == 'user') {
+                            window.open(`https://www.last.fm/user/${d.id}`, '_blank');
+                        }
+                        else {
+                            window.open(`https://www.last.fm/music/${d.artist}/_/${d.track}`, '_blank')
+                        }
                         event.stopPropagation(); // Stop the click event from bubbling up to the parent node group
+
                     });
+                
+                    nodeGroups.selectAll('text')
+                        .data(d => [d])
+                        .transition()
+                        .duration(1000)
+                        .delay(500)
+                        .style('opacity', 1);
+
+                    for (let i = 0; i < nodes.length; i++) {
+                        nodes[i].transformed = true;
+                    }
 
                 nodeGroups.style('cursor', 'pointer');
 
@@ -104,13 +177,17 @@ function getFirstNode(username) {
                 linkSelection = svg.selectAll('.link')
                     .data(links)
                     .join('line')
-                    .attr('class', 'link');
+                    .attr('class', 'link')
+                    .style('opacity', 0.5)
+                    .style('stroke-width', 1)
+                    .style('stroke', '#335778');
 
                 // Update and restart the simulation
                 simulation.nodes(nodes);
                 simulation.force('link').links(links);
                 simulation.alpha(1).restart();
             }
+
 
             // Function to expand nodes
             function expandNode(event, d) {
@@ -222,7 +299,8 @@ function getFirstNode(username) {
                                 // Calculate the x, y position based on angle and a fixed radius
                                 x: d.x + Math.cos(angle) * 100,
                                 y: d.y + Math.sin(angle) * 100,
-                                imageURL: data[i].imageURL
+                                imageURL: data[i].imageURL,
+                                transformed: false
                             };
                             nodes.push(newNode);
                             links.push({ source: d.id, target: newNode.id });

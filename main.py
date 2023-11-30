@@ -17,16 +17,16 @@ app = Flask(__name__)
 last_fm = lastfm_api('./Data/conf.json')
 database = database_api('./Data/conf.json')
 
-#top_tags_df = concatenate_feature_csvs("Top Tags")
-#top_tags_df = top_tags_df.fillna(0)
+top_tags_df = concatenate_feature_csvs("Top Tags")
+top_tags_df = top_tags_df.fillna(0)
 print(1)
 
-#top_artists_df = concatenate_feature_csvs("Top Artists")
-#top_artists_df = top_artists_df.fillna(0)
+top_artists_df = concatenate_feature_csvs("Top Artists")
+top_artists_df = top_artists_df.fillna(0)
 print(2)
 
-#top_tracks_df = concatenate_feature_csvs("Top Tracks")
-#top_tracks_df = top_tracks_df.fillna(0)
+top_tracks_df = concatenate_feature_csvs("Top Tracks")
+top_tracks_df = top_tracks_df.fillna(0)
 print(3)
 
 # top tags_df = pd.read_csv('backend/user/Top Tags_0.csv')
@@ -54,7 +54,8 @@ def calculate(username):
         explored_user.update(df['user_id'].tolist())
     
         return json_data
-    except:
+    except Exception as e:
+        print(e)
         return None
 
 @app.route('/') #hard code first
@@ -163,7 +164,7 @@ def get_artist_image(artist):
     return jsonify(data)
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5500)
+    app.run()
 
 
 
