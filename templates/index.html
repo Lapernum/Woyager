@@ -47,6 +47,20 @@
             transition-timing-function: cubic-bezier(0.83,-0.02, 0.5, 1);
         }
 
+        #b-color-pink {
+            background: rgb(225, 211, 230);
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            background-size: cover;
+            position: fixed;
+            opacity: 0;
+            height: 100vh;
+            width: 100vw;
+            transition-duration: 3s;
+            transition-timing-function: cubic-bezier(0.28, 0.01, 0.5, 1);
+            z-index: -10;
+        }
+
         /* Existing styles */
         .node {
             fill: #ccc;
@@ -93,7 +107,9 @@
 </head>
 <body style="display: flex; align-items:center; justify-content: center; min-height: 100vh;">
     <div id="b-color"></div>
-    <div id="login-panel" style="height:max-content;" class="-translate-x-20">
+    <div id="b-color-pink"></div>
+
+    <div id="login-panel" style="height:max-content;" class="-translate-x-[5vw]">
         <p class="text-6xl mb-8 font-bold text-[#335778] pointer-events-none" id="large-title">Create Your Own Music Dream.</p>
         <p class="text-lg mb-2 pointer-events-none" id="medium-title">Please input your <b> last.fm username </b> and <b>select a mode</b></p>
         <div id="username-input">
