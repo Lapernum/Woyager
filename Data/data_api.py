@@ -93,7 +93,9 @@ class lastfm_api:
         Returns:
             String: the url of the track's image
         """
+        print(artist, track)
         url = f'{self.base_url}?method=track.getInfo&api_key={self.api_key}&artist={artist}&track={track}&format=json'
+        
         response = requests.get(url)
 
         if response.status_code == 200:
@@ -121,7 +123,7 @@ class lastfm_api:
 
         if response.status_code == 200:
             data = response.json()
-            print(data)
+            # print(data)
             image_url = data['artist']['image'][1]['#text']
             return image_url
         else:
