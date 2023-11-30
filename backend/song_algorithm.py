@@ -448,8 +448,8 @@ class SelfListening:
         # Having top three tags appearing in a track in database might be difficult
         perfect_fit = self.dbapi.get_track_with_tags(tag_ids)
         pf_infos = self.dbapi.get_track_info(perfect_fit)
-        print('Fitting tags: ', tag_comb)
-        print('Length: ', len(pf_infos))
+        # print('Fitting tags: ', tag_comb)
+        # print('Length: ', len(pf_infos))
         # Exclude visited tracks
         pf_infos = [(t[1], unquote_plus(t[2])) for t in pf_infos if t is not None and (t[1], unquote_plus(t[2])) not in self.visited]
 
