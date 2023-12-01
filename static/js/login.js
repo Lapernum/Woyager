@@ -29,6 +29,10 @@ function startLogin() {
                     {
                         const currentUrl = window.location.href;
                         window.location.href = currentUrl + mode + '/' + username;
+                        document.getElementById("b-color-pink").style.setProperty("z-index", "-10");
+                        document.body.style.setProperty("background", "rgb(159, 211, 233)");
+                        document.getElementById("b-color").style.setProperty("opacity", "1");
+                        document.getElementById("b-color-pink").style.setProperty("opacity", "0");
                     }, 3000);
             }
         });
