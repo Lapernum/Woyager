@@ -16,8 +16,6 @@ cd TreeMusicRecommendation
 pip install -r requirements.txt
 
 
-
-
 Getting Started
 ===============
 Two-Modes Music Recommendation uses OpenAI's GPT-4 as the language model. You need to have an OpenAI API key to use Voyager. You
@@ -38,7 +36,6 @@ def fetch_user_tag(top_artists):
         api_key="your own opeanai api key",
     )...
 
-Now you can start to run the application.
 
 
 
