@@ -20,7 +20,8 @@ class SelfListening:
         # print(os.path.join("Data/conf.json"))
         self.dbapi = database_api(os.path.join("Data/conf.json"))
         self.lastapi = lastfm_api(os.path.join("Data/conf.json"))
-
+        
+        self.fail = False
         # The top tracks of the user, 
         # list(dict(track_name, track_id, track_url, track_listening_count, artist_id))
         self.top_track = self.lastapi.get_top_tracks(user)
@@ -60,12 +61,16 @@ class SelfListening:
         self.target_tag = {}
         self.build_top_tags()
         # The target tags and artists for frontend: {'tags': list(tags), 'artists': list(artists)}
-        self.target = {
-            'tag': [k for k, v in sorted(self.target_tag.items(), key=lambda x: x[1])[:3]], 
-            'artist': [k for k, v in sorted(self.target_artist.items(), key=lambda x: x[1])[:3]]
-        }
+        try:
+            self.target = {
+                'tag': [k for k, v in sorted(self.target_tag.items(), key=lambda x: x[1])[:3]], 
+                'artist': [k for k, v in sorted(self.target_artist.items(), key=lambda x: x[1])[:3]]
+            }
+        except:
+            self.fail = True
         # Mode, depedent on the selected button
         self.mode = 'tag'
+        
     
     # This will be an interactive function with front end
     def get_target(self):
@@ -249,6 +254,7 @@ class SelfListening:
         Output:
             - None: update self.top_tag dict
         '''
+        
         for i in range(len(self.top_track_tags)):
             if i > 50:
                 break
@@ -293,7 +299,11 @@ class SelfListening:
             
         print("Add top_artist_tags to top_tags")
         # pdb.set_trace()
-        max_tag_cnt = max(d for d in self.top_tag.values())
+        try:
+            max_tag_cnt = max(d for d in self.top_tag.values())
+        except:
+            self.fail = True
+            return None
         temp = sorted(self.top_tag.items(), key=lambda x: x[1], reverse=True)
         self.top_tag = dict(temp[:30])
         self.target_tag = dict(temp[:8])

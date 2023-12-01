@@ -510,6 +510,30 @@ function getFirstNode(username) {
                     fetch(`/targets?username=${encodeURIComponent(d.id)}`)
                         .then(response => response.json())
                         .then(data => {
+                            // Check if data is empty
+                            if (data === null || data.length === 0) {
+                                console.log('No data returned from server');
+                                progressBar.remove();
+                                isFetching = false;
+                                document.getElementById('progress-bar').style.display = 'none';
+                                // Display a message to the user
+                                d3.selectAll(this).append('text')
+                                .attr('class', 'error-text')
+                                .text('Expansion progress failed due to insufficient data.')
+                                .attr('x', d => d.x)
+                                .attr('y', d => d.y + d.size + 50) // Position the text below the node
+                                .attr('text-anchor', 'middle')
+                                .style('font-family', "'Outfit', sans-serif")
+                                .style('font-size', '1rem')
+                                .style('fill', 'red'); // Make the text red to indicate an error
+                                // eliminate the progress bar
+                                // console.log(x)
+                                
+
+                
+                                return;
+                            }
+
                             artist = data['artist']
                             tag = data['tag']
                             
