@@ -25,16 +25,16 @@ app.secret_key = 'your secret key'  # Initialize the secret key
 last_fm = lastfm_api('./Data/conf.json')
 database = database_api('./Data/conf.json')
 
-top_tags_df = concatenate_feature_csvs("Top Tags")
-top_tags_df = top_tags_df.fillna(0)
+# top_tags_df = concatenate_feature_csvs("Top Tags")
+# top_tags_df = top_tags_df.fillna(0)
 print(1)
 
-top_artists_df = concatenate_feature_csvs("Top Artists")
-top_artists_df = top_artists_df.fillna(0)
+# top_artists_df = concatenate_feature_csvs("Top Artists")
+# top_artists_df = top_artists_df.fillna(0)
 print(2)
 
-top_tracks_df = concatenate_feature_csvs("Top Tracks")
-top_tracks_df = top_tracks_df.fillna(0)
+# top_tracks_df = concatenate_feature_csvs("Top Tracks")
+# top_tracks_df = top_tracks_df.fillna(0)
 print(3)
 
 explored_user = set()
