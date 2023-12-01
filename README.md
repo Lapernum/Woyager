@@ -15,6 +15,9 @@ git clone https://github.com/MineDojo/Voyager need to change
 cd TreeMusicRecommendation
 pip install -r requirements.txt
 
+
+
+
 Change the openai key in backend/user/utils.py to your openai api key.
 
 
