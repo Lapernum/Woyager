@@ -1,11 +1,13 @@
 # Tree-Structure Two-Modes Music Recommendation
 [Website demo](http://52.91.131.179)
+
+
+![alt text](Images/TreeMusicRecommendation_structure_v1_white.png)
+
 We introduce a novel tree-structured music recommendation system, a digital innovation poised to transform the way individuals discover music. Unlike conventional list-based interfaces on music platforms, our system employs a sophisticated tree structure that not only visualizes potential musical interests but also fosters connections between users with similar tastes.
 
 The foundation of our system is twofold: the 'Similar User Mode', which connects users through shared musical preferences, and the 'Self-Listening Mode', which tailors music suggestions to the user's distinct interests. Integrated with Last.fm, this system not only deepens the music discovery experience for aficionados but also addresses the critical void of interactive and user-centric recommendation services in the digital music landscape.
 
-
-![alt text](Images/TreeMusicRecommendation_structure_v1_white.png)
 Installation
 ============
 Voyager requires Python >=3.9 and please use pip install -r requirements.txt to download all the required packages.
