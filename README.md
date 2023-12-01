@@ -1,13 +1,11 @@
 # Woyager: Tree-Structure Two-Modes Music Recommendation
-<p align="center">
-  <b>Try it yourself!</b><br>
-  <a href="http://52.91.131.179/">Woyager: Tree-Structure Two-Modes Music Recommendation</a> 
-</p>
 
 <p align="center">
-  <b>Demo video:</b><br>
-  <a href="https://youtu.be/edsCFcvh7aU">YouTube</a> 
+    <a href="http://52.91.131.179/">Website</a> &nbsp; | &nbsp; 
+  <a href="https://youtu.be/edsCFcvh7aU">Demo video</a> &nbsp; | &nbsp; 
+  <a href="https://drive.google.com/file/d/1fIoAh-E2rJu4Nisto-xkFwlwBmx_Hwan/view?usp=sharing">Paper</a>
 </p>
+
 
 ![alt text](Images/TreeMusicRecommendation_structure_v1_white.png)
 
