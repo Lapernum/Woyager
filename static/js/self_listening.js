@@ -523,11 +523,11 @@ function getFirstNode(username) {
                                         let newNode = {
                                             type: 'artist',
                                             id: `${artistName}`,
-                                            size: 30,
+                                            size: 20,
                                             // Calculate the x, y position based on angle and a fixed radius
                                             x: d.x + Math.cos(angle) * 100,
                                             y: d.y + Math.sin(angle) * 100,
-                                            imageURL: "https://drive.google.com/uc?id=16NKs6mWVua2sPqaDsaj7qo-oNyw36Yjs", //need to change
+                                            imageURL: "https://drive.google.com/uc?id=1kysULJjuCLMr2OxijS6HkKQRQn8-JaSr", //need to change
                                             transformed: false, 
                                             parent: d,
                                             clickable: true
@@ -546,11 +546,11 @@ function getFirstNode(username) {
                                 let newNode = {
                                     type: 'tag',
                                     id: `${tag[i]}`,
-                                    size: 30,
+                                    size: 20,
                                     // Calculate the x, y position based on angle and a fixed radius
                                     x: d.x + Math.cos(angle) * 100,
                                     y: d.y + Math.sin(angle) * 100,
-                                    imageURL: "https://drive.google.com/uc?id=1HZ0V0q1x3iVlYMeF3M_245CEu6LZAg2G", //need to change
+                                    imageURL: "https://drive.google.com/uc?id=1br7sdilQ5-PLpNsIOLVNZmbu0gE7U-lY", //need to change
                                     transformed: false,
                                     parent: d,
                                     clickable: true
@@ -704,11 +704,11 @@ function getFirstNode(username) {
                             let newNode = {
                                 type: 'artist',
                                 id: `${artist}`,
-                                size: 30,
+                                size: 20,
                                 // Calculate the x, y position based on angle and a fixed radius
                                 x: d.x + Math.cos(angle) * 100,
                                 y: d.y + Math.sin(angle) * 100,
-                                imageURL: "https://drive.google.com/uc?id=16NKs6mWVua2sPqaDsaj7qo-oNyw36Yjs", //need to change
+                                imageURL: "https://drive.google.com/uc?id=1kysULJjuCLMr2OxijS6HkKQRQn8-JaSr", //need to change
                                 transformed: false, 
                                 parent: d,
                                 clickable: true
@@ -722,11 +722,11 @@ function getFirstNode(username) {
                                 let newNode = {
                                     type: 'tag',
                                     id: `${tag[i]}`,
-                                    size: 30,
+                                    size: 20,
                                     // Calculate the x, y position based on angle and a fixed radius
                                     x: d.x + Math.cos(angle) * 100,
                                     y: d.y + Math.sin(angle) * 100,
-                                    imageURL: "https://drive.google.com/uc?id=1HZ0V0q1x3iVlYMeF3M_245CEu6LZAg2G", //need to change
+                                    imageURL: "https://drive.google.com/uc?id=1br7sdilQ5-PLpNsIOLVNZmbu0gE7U-lY", //need to change
                                     transformed: false, 
                                     parent: d,
                                     clickable: true
