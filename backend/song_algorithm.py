@@ -467,8 +467,8 @@ class SelfListening:
         
         # Exclude visited tracks
         nf_infos = [(t[1], unquote_plus(t[2])) for t in nf_infos if t is not None and (t[1], unquote_plus(t[2])) not in self.visited]
-
-        return pf_infos + nf_infos
+        c_infos = list(set(pf_infos + nf_infos))
+        return c_infos
     
     def select_artist_songs(self, artist=None):
         '''
