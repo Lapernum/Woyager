@@ -2,8 +2,12 @@
 const width = window.innerWidth;
 const height = window.innerHeight;
 const svg = d3.select('#visualization').append('svg')
-    .attr('width', 20000)
-    .attr('height', 30000);
+    .attr('width', 10000)
+    .attr('height', 10000);
+const legend_svg = d3.select('#visualization').append('svg')
+    .attr('id', 'legend_svg')
+    .attr('width', width)
+    .attr('height', height);
 
 window.scrollTo(0, 0);
 
@@ -28,16 +32,16 @@ window.onload = function() {
         {type: 'track', color: 'url(#blueGradient)'},
     ];
     
-    var legend = svg.selectAll('.legend')
+    var legend = legend_svg.selectAll('.legend')
     .data(types)
     .enter().append('g')
     .attr('class', 'legend')
-    .attr('transform', function(d, i) { return 'translate(-20,' + (i * 30 + 20) + ')'; })
+    .attr('transform', function(d, i) { return 'translate(-30,' + (i * 40 + 30) + ')'; })
     .style('opacity', 0); // initially set the opacity to 0
 
     // Transition the opacity to 1 over 1 second
     legend.transition()
-        .duration(1000)
+        .duration(3000)
         .style('opacity', 1);
 
     // Append a circle to each g
@@ -46,16 +50,17 @@ window.onload = function() {
         .attr('r', 12)
         .style('fill', 'none') // make the circle hollow
         .style('stroke', d => d.color) // color the circle's outline
-        .style('stroke-width', 3);
+        .style('stroke-width', 5);
 
     // Apply the filter to your text
     legend.append('text')
-        .attr('x', width - 35)
+        .attr('x', width - 37)
         .attr('y', 4)
         .attr('dy', '.35em')
         .style('text-anchor', 'end')
         .style('fill', 'white')
         .style('font-size', '15px')
+        .style('font-weight', 'bold')
         .text(d => d.type);
 }
 
@@ -360,7 +365,6 @@ function getFirstNode(username) {
                 isFetching = true;
                 document.getElementById('progress-bar').style.display = 'block';  // Show the progress bar
 
-
                 // Define the circle path generator
                 const radius = d.size + 5; // The radius of the circle
                 const circlePath = `
@@ -503,7 +507,7 @@ function getFirstNode(username) {
    
                 if (d.type == 'user') {
                     // Fetch targets from server
-                    fetch(`/targets/${encodeURIComponent(d.id)}`)
+                    fetch(`/targets?username=${encodeURIComponent(d.id)}`)
                         .then(response => response.json())
                         .then(data => {
                             artist = data['artist']
@@ -516,18 +520,18 @@ function getFirstNode(username) {
                                 console.log(artistName);
                                 let angle = angleIncrement * i; // angle for this node
                 
-                                return fetch(`/get_artist_image/${encodeURIComponent(artistName)}`)
+                                return fetch(`/get_artist_image?artist=${encodeURIComponent(artistName)}`)
                                     .then(response => response.json())
                                     .then(data => {
                                         console.log(data)
                                         let newNode = {
                                             type: 'artist',
                                             id: `${artistName}`,
-                                            size: 30,
+                                            size: 20,
                                             // Calculate the x, y position based on angle and a fixed radius
                                             x: d.x + Math.cos(angle) * 100,
                                             y: d.y + Math.sin(angle) * 100,
-                                            imageURL: "https://drive.google.com/uc?id=16NKs6mWVua2sPqaDsaj7qo-oNyw36Yjs", //need to change
+                                            imageURL: "https://drive.google.com/uc?id=1kysULJjuCLMr2OxijS6HkKQRQn8-JaSr", //need to change
                                             transformed: false, 
                                             parent: d,
                                             clickable: true
@@ -546,11 +550,11 @@ function getFirstNode(username) {
                                 let newNode = {
                                     type: 'tag',
                                     id: `${tag[i]}`,
-                                    size: 30,
+                                    size: 20,
                                     // Calculate the x, y position based on angle and a fixed radius
                                     x: d.x + Math.cos(angle) * 100,
                                     y: d.y + Math.sin(angle) * 100,
-                                    imageURL: "https://drive.google.com/uc?id=1HZ0V0q1x3iVlYMeF3M_245CEu6LZAg2G", //need to change
+                                    imageURL: "https://drive.google.com/uc?id=1br7sdilQ5-PLpNsIOLVNZmbu0gE7U-lY", //need to change
                                     transformed: false,
                                     parent: d,
                                     clickable: true
@@ -578,7 +582,7 @@ function getFirstNode(username) {
                         });
                 }
                 else if (d.type == 'tag') {
-                    fetch(`/self_listening/targets/${encodeURIComponent(d.id)}`)
+                    fetch(`/self_listening/targets?choice=${encodeURIComponent(d.id)}`)
                         .then(response => response.json())
                         .then(data => {
                             console.log(data)
@@ -593,7 +597,7 @@ function getFirstNode(username) {
                                 let parentAngle = Math.atan2(d.y - d.parent.y , d.x - d.parent.x);
                                 let angle = angleIncrement * i + parentAngle - Math.PI / 2;
                             
-                                return fetch(`/get_track_image/${encodeURIComponent(artist)}/${encodeURIComponent(track)}`)
+                                return fetch(`/get_track_image?artist=${encodeURIComponent(artist)}&track=${encodeURIComponent(track)}`)
                                     .then(response => response.json())
                                     .then(data => {
                                         let newNode = {
@@ -630,7 +634,7 @@ function getFirstNode(username) {
                         });
                 }
                 else if (d.type == 'artist') {
-                    fetch(`/self_listening/targets/${encodeURIComponent(d.id)}`)
+                    fetch(`/self_listening/targets?choice=${encodeURIComponent(d.id)}`)
                         .then(response => response.json())
                         .then(data => {
                             console.log(data)
@@ -651,7 +655,7 @@ function getFirstNode(username) {
                             
                                 let angle = angleIncrement * i + parentAngle - Math.PI / 2;
                 
-                                return fetch(`/get_track_image/${encodeURIComponent(artist)}/${encodeURIComponent(track)}`)
+                                return fetch(`/get_track_image?artist=${encodeURIComponent(artist)}&track=${encodeURIComponent(track)}`)
                                     .then(response => response.json())
                                     .then(data => {
                                         let newNode = {
@@ -688,7 +692,7 @@ function getFirstNode(username) {
                         });
                 }
                 else {
-                    fetch(`/self_listening/add_track/${encodeURIComponent(d.artist)}/${encodeURIComponent(d.track)}`)
+                    fetch(`/self_listening/add_track?artist=${encodeURIComponent(d.artist)}&track=${encodeURIComponent(d.track)}`)
                         .then(response => response.json())
                         .then(data => {
                             artist = data['artist']
@@ -704,11 +708,11 @@ function getFirstNode(username) {
                             let newNode = {
                                 type: 'artist',
                                 id: `${artist}`,
-                                size: 30,
+                                size: 20,
                                 // Calculate the x, y position based on angle and a fixed radius
                                 x: d.x + Math.cos(angle) * 100,
                                 y: d.y + Math.sin(angle) * 100,
-                                imageURL: "https://drive.google.com/uc?id=16NKs6mWVua2sPqaDsaj7qo-oNyw36Yjs", //need to change
+                                imageURL: "https://drive.google.com/uc?id=1kysULJjuCLMr2OxijS6HkKQRQn8-JaSr", //need to change
                                 transformed: false, 
                                 parent: d,
                                 clickable: true
@@ -722,11 +726,11 @@ function getFirstNode(username) {
                                 let newNode = {
                                     type: 'tag',
                                     id: `${tag[i]}`,
-                                    size: 30,
+                                    size: 20,
                                     // Calculate the x, y position based on angle and a fixed radius
                                     x: d.x + Math.cos(angle) * 100,
                                     y: d.y + Math.sin(angle) * 100,
-                                    imageURL: "https://drive.google.com/uc?id=1HZ0V0q1x3iVlYMeF3M_245CEu6LZAg2G", //need to change
+                                    imageURL: "https://drive.google.com/uc?id=1br7sdilQ5-PLpNsIOLVNZmbu0gE7U-lY", //need to change
                                     transformed: false, 
                                     parent: d,
                                     clickable: true
@@ -821,10 +825,10 @@ function getFirstNode(username) {
 
 function instructionSwitch() {
     let instruction_but = document.getElementById("instruction");
-    if (instruction_but.innerHTML == "How to use?") {
+    if (instruction_but.innerHTML == "<b>How to use?</b>") {
         instruction_but.innerHTML = "Welcome to <b>Self Listening</b> mode!<br /><b>Click on Avatars</b> to expand the tree to see something you may love<br /><b>Click on the names</b> to jump to last.fm if you're interested!<br />Enjoy!!";
     } else {
-        instruction_but.innerHTML = "How to use?";
+        instruction_but.innerHTML = "<b>How to use?</b>";
     }
 }
 
