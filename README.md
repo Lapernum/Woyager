@@ -1,5 +1,8 @@
 # Tree-Structure Two-Modes Music Recommendation
-[Website demo](http://52.91.131.179)
+<p align="center">
+    [Website demo](http://52.91.131.179)
+</p>
+
 
 
 ![alt text](Images/TreeMusicRecommendation_structure_v1_white.png)
