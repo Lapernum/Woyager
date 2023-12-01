@@ -9,9 +9,9 @@ Voyager requires Python >=3.9 and please use pip install -r requirements.txt to 
 
 Python Install
 --------------
-git clone https://github.com/MineDojo/Voyager need to change
-cd TreeMusicRecommendation
-pip install -r requirements.txt
+git clone https://github.com/MineDojo/Voyager need to change\\
+cd TreeMusicRecommendation\\
+pip install -r requirements.txt\\
 
 
 Fabric Mods Install
