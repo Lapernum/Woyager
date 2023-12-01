@@ -1,4 +1,4 @@
-# Tree-Structure Two-Modes Music Recommendation
+# Woyager: Tree-Structure Two-Modes Music Recommendation
 <p align="center">
   <b>Web demo:</b><br>
   <a href="http://52.91.131.179/">Tree-Structure Two-Modes Music Recommendation</a> 
@@ -8,7 +8,7 @@
 
 ![alt text](Images/TreeMusicRecommendation_structure_v1_white.png)
 
-We introduce a novel tree-structured music recommendation system, a digital innovation poised to transform the way individuals discover music. Unlike conventional list-based interfaces on music platforms, our system employs a sophisticated tree structure that not only visualizes potential musical interests but also fosters connections between users with similar tastes.
+We introduce a novel tree-structured music recommendation system, Woyager (a.k.a. Wave Voyager), a digital innovation poised to transform the way individuals discover music. Unlike conventional list-based interfaces on music platforms, our system employs a sophisticated tree structure that not only visualizes potential musical interests but also fosters connections between users with similar tastes.
 
 The foundation of our system is twofold: the 'Similar User Mode', which connects users through shared musical preferences, and the 'Self-Listening Mode', which tailors music suggestions to the user's distinct interests. Integrated with Last.fm, this system not only deepens the music discovery experience for aficionados but also addresses the critical void of interactive and user-centric recommendation services in the digital music landscape.
 
@@ -19,8 +19,8 @@ Tree-Structure Two-Modes Music Recommendation application requires Python >=3.9 
 Python Install
 --------------
 ```
-git clone https://github.com/MineDojo/Voyager need to change
-cd TreeMusicRecommendation
+git clone https://github.com/Lapernum/Woyager.git
+cd Woyager
 pip install -r requirements.txt
 ```
 
