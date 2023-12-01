@@ -9,9 +9,8 @@ Voyager requires Python >=3.9 and please use pip install -r requirements.txt to 
 
 Python Install
 --------------
-git clone https://github.com/MineDojo/Voyager need to change
-
 ```
+git clone https://github.com/MineDojo/Voyager need to change
 cd TreeMusicRecommendation
 pip install -r requirements.txt
 ```
@@ -36,6 +35,17 @@ def fetch_user_tag(top_artists):
     client = OpenAI(
         api_key="your own opeanai api key",
     )...
+```
+Now you can start to run the program.
+For Unix/Linux/Mac:
+```
+export FLASK_APP=main.py
+flask run
+```
+For Windows:
+```
+set FLASK_APP=main.py
+flask run
 ```
 
 
