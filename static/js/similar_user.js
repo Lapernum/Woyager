@@ -2,8 +2,12 @@
 const width = window.innerWidth;
 const height = window.innerHeight;
 const svg = d3.select('#visualization').append('svg')
-    .attr('width', 30000)
-    .attr('height', 20000);
+    .attr('width', 10000)
+    .attr('height', 10000);
+const legend_svg = d3.select('#visualization').append('svg')
+    .attr('id', 'legend_svg')
+    .attr('width', width)
+    .attr('height', height);
 
 console.log(width);
 console.log(height)
@@ -22,6 +26,9 @@ window.onload = function() {
     document.getElementById("instruction").style.setProperty("opacity", "0.8");
     document.getElementById("totop").style.setProperty("opacity", "0.8");
     document.getElementById("totop").style.setProperty("z-index", "11");
+    var types = [
+        {type: 'user', color: 'url(#pinkGradient)'},
+    ];
     fetch(`/clear_explored_users/${username}`, {
         method: 'POST',
     })
@@ -30,6 +37,37 @@ window.onload = function() {
     .catch((error) => {
         console.error('Error:', error);
     });
+
+    var legend = legend_svg.selectAll('.legend')
+    .data(types)
+    .enter().append('g')
+    .attr('class', 'legend')
+    .attr('transform', function(d, i) { return 'translate(-30,' + (i * 40 + 30) + ')'; })
+    .style('opacity', 0); // initially set the opacity to 0
+
+    // Transition the opacity to 1 over 1 second
+    legend.transition()
+        .duration(3000)
+        .style('opacity', 1);
+
+    // Append a circle to each g
+    legend.append('circle')
+        .attr('cx', width - 18)
+        .attr('r', 12)
+        .style('fill', 'none') // make the circle hollow
+        .style('stroke', d => d.color) // color the circle's outline
+        .style('stroke-width', 5);
+
+    // Apply the filter to your text
+    legend.append('text')
+        .attr('x', width - 37)
+        .attr('y', 4)
+        .attr('dy', '.35em')
+        .style('text-anchor', 'end')
+        .style('fill', 'white')
+        .style('font-size', '15px')
+        .style('font-weight', 'bold')
+        .text(d => d.type);
 
 };
 
@@ -467,10 +505,10 @@ function getFirstNode(username) {
 
 function instructionSwitch() {
     let instruction_but = document.getElementById("instruction");
-    if (instruction_but.innerHTML == "How to use?") {
+    if (instruction_but.innerHTML == "<b>How to use?</b>") {
         instruction_but.innerHTML = "Welcome to <b>Similar User</b> mode!<br /><b>Click on Avatars</b> to expand the tree to find users similar to you<br /><b>Click on the names</b> to jump to last.fm if you're interested!<br />Enjoy!!";
     } else {
-        instruction_but.innerHTML = "How to use?";
+        instruction_but.innerHTML = "<b>How to use?</b>";
     }
 }
 
