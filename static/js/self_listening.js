@@ -503,7 +503,7 @@ function getFirstNode(username) {
    
                 if (d.type == 'user') {
                     // Fetch targets from server
-                    fetch(`/targets/${encodeURIComponent(d.id)}`)
+                    fetch(`/targets?username=${encodeURIComponent(d.id)}`)
                         .then(response => response.json())
                         .then(data => {
                             artist = data['artist']
@@ -516,7 +516,7 @@ function getFirstNode(username) {
                                 console.log(artistName);
                                 let angle = angleIncrement * i; // angle for this node
                 
-                                return fetch(`/get_artist_image/${encodeURIComponent(artistName)}`)
+                                return fetch(`/get_artist_image?artist=${encodeURIComponent(artistName)}`)
                                     .then(response => response.json())
                                     .then(data => {
                                         console.log(data)
@@ -578,7 +578,7 @@ function getFirstNode(username) {
                         });
                 }
                 else if (d.type == 'tag') {
-                    fetch(`/self_listening/targets/${encodeURIComponent(d.id)}`)
+                    fetch(`/self_listening/targets?choice=${encodeURIComponent(d.id)}`)
                         .then(response => response.json())
                         .then(data => {
                             console.log(data)
@@ -593,7 +593,7 @@ function getFirstNode(username) {
                                 let parentAngle = Math.atan2(d.y - d.parent.y , d.x - d.parent.x);
                                 let angle = angleIncrement * i + parentAngle - Math.PI / 2;
                             
-                                return fetch(`/get_track_image/${encodeURIComponent(artist)}/${encodeURIComponent(track)}`)
+                                return fetch(`/get_track_image?artist=${encodeURIComponent(artist)}&track=${encodeURIComponent(track)}`)
                                     .then(response => response.json())
                                     .then(data => {
                                         let newNode = {
@@ -630,7 +630,7 @@ function getFirstNode(username) {
                         });
                 }
                 else if (d.type == 'artist') {
-                    fetch(`/self_listening/targets/${encodeURIComponent(d.id)}`)
+                    fetch(`/self_listening/targets?choice=${encodeURIComponent(d.id)}`)
                         .then(response => response.json())
                         .then(data => {
                             console.log(data)
@@ -651,7 +651,7 @@ function getFirstNode(username) {
                             
                                 let angle = angleIncrement * i + parentAngle - Math.PI / 2;
                 
-                                return fetch(`/get_track_image/${encodeURIComponent(artist)}/${encodeURIComponent(track)}`)
+                                return fetch(`/get_track_image?artist=${encodeURIComponent(artist)}&track=${encodeURIComponent(track)}`)
                                     .then(response => response.json())
                                     .then(data => {
                                         let newNode = {
@@ -688,7 +688,7 @@ function getFirstNode(username) {
                         });
                 }
                 else {
-                    fetch(`/self_listening/add_track/${encodeURIComponent(d.artist)}/${encodeURIComponent(d.track)}`)
+                    fetch(`/self_listening/add_track?artist=${encodeURIComponent(d.artist)}&track=${encodeURIComponent(d.track)}`)
                         .then(response => response.json())
                         .then(data => {
                             artist = data['artist']

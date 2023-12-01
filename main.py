@@ -10,7 +10,7 @@ import pandas as pd
 from flask import render_template
 from urllib.parse import unquote
 import copy
-from flask import Flask, jsonify, session  # Import session
+from flask import Flask, jsonify, session, request # Import session
 import psutil
 
 def log_system_usage():
@@ -26,20 +26,20 @@ app.secret_key = 'your secret key'  # Initialize the secret key
 last_fm = lastfm_api('./Data/conf.json')
 database = database_api('./Data/conf.json')
 
-# top_tags_df = concatenate_feature_csvs("Top Tags")
-# top_tags_df = top_tags_df.fillna(0)
-# print(1)
-# log_system_usage()
+top_tags_df = concatenate_feature_csvs("Top Tags")
+top_tags_df = top_tags_df.fillna(0)
+print(1)
+log_system_usage()
 
-# top_artists_df = concatenate_feature_csvs("Top Artists")
-# top_artists_df = top_artists_df.fillna(0)
-# print(2)
-# log_system_usage()
+top_artists_df = concatenate_feature_csvs("Top Artists")
+top_artists_df = top_artists_df.fillna(0)
+print(2)
+log_system_usage()
 
-# top_tracks_df = concatenate_feature_csvs("Top Tracks")
-# top_tracks_df = top_tracks_df.fillna(0)
-# print(3)
-# log_system_usage()
+top_tracks_df = concatenate_feature_csvs("Top Tracks")
+top_tracks_df = top_tracks_df.fillna(0)
+print(3)
+log_system_usage()
 
 # top tags_df = pd.read_csv('backend/user/Top Tags_0.csv')
 # top artists_df = pd.read_csv('backend/user/Top Artists_0.csv')
@@ -110,12 +110,13 @@ primary_target = {}
 def self_listening_index(username):
     return render_template('/self_listening/index.html', username=username)
 
-@app.route('/targets/<username>')
-def provide_targets(username):
+@app.route('/targets', methods=['GET'])
+def provide_targets():
     '''
     Function to retrieve user name from login,
     then return the target tags and top artists for choosing
     '''
+    username = request.args.get('username')
     global user
     global primary_target
     user = SelfListening(unquote(username))
@@ -123,12 +124,13 @@ def provide_targets(username):
     primary_target = targets
     return targets
 
-@app.route('/self_listening/targets/<choice>')
-def recommend_songs(choice):
+@app.route('/self_listening/targets', methods=['GET'])
+def recommend_songs():
     '''
     The user will select a choice from targets,
     this function recommend 10 songs
     '''
+    choice = request.args.get('choice')
     global user
     user.change_mode(unquote(choice))
     ten_songs, scores = user.select_ten()
@@ -136,14 +138,16 @@ def recommend_songs(choice):
     # apply minimax to scores to map it into (20,40)
     return {"ten_songs": ten_songs[:5], "scores": scores}
 
-@app.route('/self_listening/add_track/<artist>/<track>')
-def add_track(artist, track):
+@app.route('/self_listening/add_track', methods=['GET'])
+def add_track():
     '''
     The user will select a song from the 10 songs,
     this function add this selected song to the corresponding SelfListening class object
 
     track: {'track_name', 'artist_name'}
     '''
+    artist = request.args.get('artist')
+    track = request.args.get('track')
     global user
     nt = {'track_name': unquote(track), 'artist_name': unquote(artist)}
     print(nt)
@@ -179,13 +183,16 @@ def get_user_image(username):
     data = last_fm.get_user_image_url(username)
     return jsonify(data)
 
-@app.route('/get_track_image/<artist>/<track>')
-def get_track_image(artist, track):
+@app.route('/get_track_image', methods=['GET'])
+def get_track_image():
+    artist = request.args.get('artist')
+    track = request.args.get('track')
     data = last_fm.get_track_image_url(artist, track)
     return jsonify(data)
 
-@app.route('/get_artist_image/<artist>')
-def get_artist_image(artist):
+@app.route('/get_artist_image', methods=['GET'])
+def get_artist_image():
+    artist = request.args.get('artist')
     data = last_fm.get_artist_image_url(artist)
     return jsonify(data)
 
