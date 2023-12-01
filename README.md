@@ -10,7 +10,7 @@ The foundation of our system is twofold: the 'Similar User Mode', which connects
 
 Installation
 ============
-Voyager requires Python >=3.9 and please use pip install -r requirements.txt to download all the required packages.
+ree-Structure Two-Modes Music Recommendation application requires Python >=3.9 and please use pip install -r requirements.txt to download all the required packages.
 
 Python Install
 --------------
