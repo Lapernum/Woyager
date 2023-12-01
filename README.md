@@ -19,6 +19,6 @@ pip install -r requirements.txt
 Getting Started
 ===============
 Two-Modes Music Recommendation uses OpenAI's GPT-4 as the language model. You need to have an OpenAI API key to use Voyager. You
-can get one from here.
+can get one from <a href="https://platform.openai.com/api-keys">here</a>.
 
 After the installation process, you can run Voyager by:
