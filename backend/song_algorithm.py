@@ -145,7 +145,8 @@ class SelfListening:
         # Update artists
         existing_artists_set = set(self.target['artist'])
         new_artists_set = set(prime['artist'])
-        unique_artists = list(existing_artists_set.union(new_artists_set))
+        add_track_artists_set = set(s['artist_name'] for s in self.added_track)
+        unique_artists = list(existing_artists_set.union(new_artists_set, add_track_artists_set))
         self.target['artist'] = unique_artists
 
         
