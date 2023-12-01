@@ -6,6 +6,11 @@ window.onload = function() {
     document.getElementById("username-input").style.setProperty("opacity", "1");
     document.getElementById("username-input").style.setProperty("transform", "none");
     document.getElementById("b-color").style.setProperty("opacity", "1");
+    document.getElementById("github-logo").style.setProperty("opacity", "0.5");
+    setTimeout(function()
+        {
+            document.getElementById("github-logo").style.setProperty("transition-duration", "0.3s");
+        }, 2000);
 }
 
 function startLogin() {
