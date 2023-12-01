@@ -1,6 +1,7 @@
 # Tree-Structure Two-Modes Music Recommendation
 <p align="center">
-    [Website demo](http://52.91.131.179)
+  <b>Web demo:</b><br>
+  <a href="http://52.91.131.179/">ree-Structure Two-Modes Music Recommendation</a> |
 </p>
 
 
