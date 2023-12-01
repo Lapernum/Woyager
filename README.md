@@ -27,7 +27,7 @@ can get one from <a href="https://platform.openai.com/api-keys">here</a>.
 
 After the installation process, you need to change the openai key in **backend/user/utils.py** to your openai api key.
 ```python
-//backend/user/utils.py
+** backend/user/utils.py **
 def fetch_user_tag(top_artists):
     """
     Fetches the top three tags of the user based on the top artists preference of a user
