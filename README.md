@@ -36,6 +36,5 @@ def fetch_user_tag(top_artists):
     if not top_artists:
         return ""
     client = OpenAI(
-        # defaults to os.environ.get("OPENAI_API_KEY")
         api_key="your own opeanai api key",
     )...
