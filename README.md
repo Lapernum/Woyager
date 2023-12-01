@@ -11,8 +11,8 @@ Python Install
 --------------
 git clone https://github.com/MineDojo/Voyager need to change
 
+```python
 cd TreeMusicRecommendation
-
 pip install -r requirements.txt
 
 Change the openai key in backend/user/utils.py to your openai api key.
@@ -39,3 +39,9 @@ def fetch_user_tag(top_artists):
     client = OpenAI(
         api_key="your own opeanai api key",
     )...
+
+Now you can start to run the application.
+
+
+
+
