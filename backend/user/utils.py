@@ -94,7 +94,7 @@ def fetch_user_tag(top_artists):
         return ""
     client = OpenAI(
         # defaults to os.environ.get("OPENAI_API_KEY")
-        api_key="your own opeanai api key",
+        api_key="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",
     )
 
     completion = client.chat.completions.create(
