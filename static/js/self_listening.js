@@ -130,6 +130,7 @@ function getFirstNode(username) {
                     .data(nodes, d => d.id)
                     .join('g')
                     .attr('class', 'node-group')
+                    .attr('id', 'node-group')
                     .call(drag);
 
                 // Light blue gradient
@@ -510,6 +511,32 @@ function getFirstNode(username) {
                     fetch(`/targets?username=${encodeURIComponent(d.id)}`)
                         .then(response => response.json())
                         .then(data => {
+                            // Check if data is empty
+                            if (data === null || data.length === 0) {
+                                console.log('No data returned from server');
+                                progressBar.remove();
+                                isFetching = false;
+                                document.getElementById('progress-bar').style.display = 'none';
+                                // Display a message to the user
+                                let bodyGroup = document.body;
+                                const warning = document.createElement('text');
+                                warning.style.setProperty("font-family", "'Outfit', sans-serif");
+                                warning.style.setProperty("font-size", "1.5rem");
+                                warning.style.setProperty("color", "purple");
+                                warning.style.setProperty("position", "fixed");
+                                warning.style.setProperty("text-anchor", "middle");
+                                warning.style.setProperty("top", "90vh");
+                                warning.style.setProperty("left", "31vw");
+                                warning.style.setProperty("z-index", "20");
+                                warning.style.setProperty("font-weight", "bold");
+                                warning.style.setProperty("opacity", "0.5");
+                                warning.style.setProperty("pointer-events", "none")
+                                warning.innerHTML = 'Expansion progress failed due to insufficient data.';
+                                bodyGroup.appendChild(warning);
+                
+                                return;
+                            }
+
                             artist = data['artist']
                             tag = data['tag']
                             

@@ -107,6 +107,8 @@ def provide_targets():
     global user
     global primary_target
     user = SelfListening(unquote(username))
+    if user.fail:
+        return jsonify(None)
     targets = user.get_target()
     primary_target = targets
     return targets
