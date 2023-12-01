@@ -2,8 +2,12 @@
 const width = window.innerWidth;
 const height = window.innerHeight;
 const svg = d3.select('#visualization').append('svg')
-    .attr('width', 20000)
-    .attr('height', 30000);
+    .attr('width', 10000)
+    .attr('height', 10000);
+const legend_svg = d3.select('#visualization').append('svg')
+    .attr('id', 'legend_svg')
+    .attr('width', width)
+    .attr('height', height);
 
 window.scrollTo(0, 0);
 
@@ -28,16 +32,16 @@ window.onload = function() {
         {type: 'track', color: 'url(#blueGradient)'},
     ];
     
-    var legend = svg.selectAll('.legend')
+    var legend = legend_svg.selectAll('.legend')
     .data(types)
     .enter().append('g')
     .attr('class', 'legend')
-    .attr('transform', function(d, i) { return 'translate(-20,' + (i * 30 + 20) + ')'; })
+    .attr('transform', function(d, i) { return 'translate(-30,' + (i * 40 + 30) + ')'; })
     .style('opacity', 0); // initially set the opacity to 0
 
     // Transition the opacity to 1 over 1 second
     legend.transition()
-        .duration(1000)
+        .duration(3000)
         .style('opacity', 1);
 
     // Append a circle to each g
@@ -46,16 +50,17 @@ window.onload = function() {
         .attr('r', 12)
         .style('fill', 'none') // make the circle hollow
         .style('stroke', d => d.color) // color the circle's outline
-        .style('stroke-width', 3);
+        .style('stroke-width', 5);
 
     // Apply the filter to your text
     legend.append('text')
-        .attr('x', width - 35)
+        .attr('x', width - 37)
         .attr('y', 4)
         .attr('dy', '.35em')
         .style('text-anchor', 'end')
         .style('fill', 'white')
         .style('font-size', '15px')
+        .style('font-weight', 'bold')
         .text(d => d.type);
 }
 
@@ -359,7 +364,6 @@ function getFirstNode(username) {
                 d.clickable = false;
                 isFetching = true;
                 document.getElementById('progress-bar').style.display = 'block';  // Show the progress bar
-
 
                 // Define the circle path generator
                 const radius = d.size + 5; // The radius of the circle
@@ -821,10 +825,10 @@ function getFirstNode(username) {
 
 function instructionSwitch() {
     let instruction_but = document.getElementById("instruction");
-    if (instruction_but.innerHTML == "How to use?") {
+    if (instruction_but.innerHTML == "<b>How to use?</b>") {
         instruction_but.innerHTML = "Welcome to <b>Self Listening</b> mode!<br /><b>Click on Avatars</b> to expand the tree to see something you may love<br /><b>Click on the names</b> to jump to last.fm if you're interested!<br />Enjoy!!";
     } else {
-        instruction_but.innerHTML = "How to use?";
+        instruction_but.innerHTML = "<b>How to use?</b>";
     }
 }
 

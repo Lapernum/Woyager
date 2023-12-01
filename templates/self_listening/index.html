@@ -225,7 +225,7 @@
             position: fixed;
             right: 10px;
             bottom: 50px;
-            background-color: #e7e7e7;
+            background-color: #ffffff;
             color: black;
             opacity: 0;
             z-index: -10;
@@ -247,7 +247,7 @@
             position: fixed;
             right: 10px;
             bottom: 10px;
-            background-color: #e7e7e7;
+            background-color: #ffffff;
             color: black;
             opacity: 0;
             z-index: -10;
@@ -263,6 +263,33 @@
             color: white;
         }
 
+        #legend_svg {
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
+
+        /* width */
+        ::-webkit-scrollbar {
+        width: 5px;
+        height: 5px;
+        }
+
+        /* Track */
+        ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        opacity: 0;
+        }
+
+        /* Handle */
+        ::-webkit-scrollbar-thumb {
+        background: #6c95bb;
+        }
+
+        /* Handle on hover */
+        ::-webkit-scrollbar-thumb:hover {
+        background: #335778;
+        }
 
     </style>
 </head>
@@ -273,8 +300,8 @@
     <div id="visualization"></div>
     <div id="progress-bar"></div>
 
-    <button type="button" id="instruction" onclick="instructionSwitch()">How to use?</button>
-    <button type="button" id="totop" onclick="scroll_Top()">Back Top</button>
+    <button type="button" id="instruction" onclick="instructionSwitch()"><b>How to use?</b></button>
+    <button type="button" id="totop" onclick="scroll_Top()"><b>Back Top</b></button>
 
     <select id="navigation_select" onchange="navigateTo(this.value)" class="input input-bordered input-[#335778] w-40 max-w-xs border-[#335778] ml-1 bg-sky-500/[0]">
         <option value="self_listening" class="bg-[#B8E2F3]/[0.5] text-black selection:text-white">Self Listening</option>
