@@ -526,7 +526,7 @@ function getFirstNode(username) {
                                 warning.style.setProperty("position", "fixed");
                                 warning.style.setProperty("text-anchor", "middle");
                                 warning.style.setProperty("top", "90vh");
-                                warning.style.setProperty("left", "31vw");
+                                warning.style.setProperty("left", "calc(50vw - 18rem)");
                                 warning.style.setProperty("z-index", "20");
                                 warning.style.setProperty("font-weight", "bold");
                                 warning.style.setProperty("opacity", "0.5");
