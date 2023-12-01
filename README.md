@@ -30,9 +30,9 @@ How to run
 Two-Modes Music Recommendation uses OpenAI's GPT-4 as the language model. You need to have an OpenAI API key to use Voyager. You
 can get one from <a href="https://platform.openai.com/api-keys">here</a>.
 
-After the installation process, you need to change the openai key in the fetch_user_tag function in**backend/user/utils.py** to your openai api key.
+After the installation process, you need to change the openai key in **backend/user/utils.py** to your openai api key.
 ```python
-** backend/user/utils.py **
+//In backend/user/utils.py, find
 def fetch_user_tag(top_artists):
     """
     Fetches the top three tags of the user based on the top artists preference of a user
@@ -42,7 +42,7 @@ def fetch_user_tag(top_artists):
     if not top_artists:
         return ""
     client = OpenAI(
-        api_key="your own opeanai api key",
+        api_key="your own opeanai api key", //your openai key
     )...
 ```
 Now you can start to run the program.
