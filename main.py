@@ -23,7 +23,6 @@ app.secret_key = 'your secret key'  # Initialize the secret key
 
 
 last_fm = lastfm_api('./Data/conf.json')
-database = database_api('./Data/conf.json')
 
 top_tags_df = concatenate_feature_csvs("Top Tags")
 top_tags_df = top_tags_df.fillna(0)
@@ -81,6 +80,7 @@ def get_data(username):
 
 @app.route('/clear_explored_users/<username>', methods=['POST']) #hard code first
 def clear_explored_users(username):
+    database = database_api('./Data/conf.json')
     user_id = database.get_user_id(username)
 
     if user_id is not None:
@@ -89,6 +89,8 @@ def clear_explored_users(username):
     session['explored_user'] = []  # Clear explored_user in session
     if user_id is not None:
         session['explored_user'].append(user_id)
+    
+    database.close_connection()
     return jsonify({'status': 'success'}), 200
 
 # @app.route('/login')
@@ -154,6 +156,7 @@ def add_track():
 
 @app.route('/check_user/<username>')
 def check_user(username):
+    database = database_api('./Data/conf.json')
     data = last_fm.get_user_image_url(username)
     user_id = database.get_user_id(username)
 
@@ -165,7 +168,8 @@ def check_user(username):
     if user_id is not None:
         explored_user.append(user_id)
         session['explored_user'] = explored_user  # Save explored_user back to session
-        
+    
+    database.close_connection()
     if data is None:
         return jsonify(False)
     else:
@@ -190,7 +194,7 @@ def get_artist_image():
     return jsonify(data)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
 
 
 
