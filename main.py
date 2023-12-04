@@ -10,7 +10,7 @@ import pandas as pd
 from flask import render_template
 from urllib.parse import unquote
 import copy
-from flask import Flask, jsonify, session, request # Import session
+from flask import Flask, jsonify, session, request, send_from_directory # Import session
 
 def log_system_usage():
     cpu_usage = psutil.cpu_percent()
@@ -60,6 +60,10 @@ def calculate(username):
         print(e)
         return None
 
+@app.route("/static/favicon.ico") # 2 add get for favicon
+def fav():
+    print(os.path.join(app.root_path, 'static'))
+    return send_from_directory(app.static_folder, 'favicon.ico') # for sure return the file
 
 @app.route('/') #hard code first
 def index():

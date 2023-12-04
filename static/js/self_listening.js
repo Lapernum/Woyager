@@ -13,6 +13,8 @@ window.scrollTo(0, 0);
 
 let nodes = [];
 
+let url_elements = window.location.href.split("/");
+
 window.onload = function() {
     document.getElementById("b-color-pink").style.setProperty("z-index", "-10");
     document.getElementById("b-color-pink").style.setProperty("opacity", "0");
@@ -71,7 +73,14 @@ function navigateTo(page) {
     document.getElementById("b-color-pink").style.setProperty("z-index", "10");
     document.body.style.setProperty("background", "rgb(225, 211, 230)");
     document.getElementById("b-color-pink").style.setProperty("opacity", "1");
-    fetch('/clear_explored_users', {
+    let warning_text = document.getElementById("warning-text");
+    if (warning_text != null) {
+        warning_text.style.setProperty("transition-duration", "3s");
+        setTimeout(function() {
+            warning_text.style.setProperty("opacity", "0");
+        }, 100);
+    }
+    fetch('/clear_explored_users/' + url_elements[url_elements.length - 1], {
         method: 'POST',
     })
     .then(response => response.json())
@@ -526,13 +535,19 @@ function getFirstNode(username) {
                                 warning.style.setProperty("position", "fixed");
                                 warning.style.setProperty("text-anchor", "middle");
                                 warning.style.setProperty("top", "90vh");
-                                warning.style.setProperty("left", "31vw");
+                                warning.style.setProperty("left", "calc(50vw - 18rem)");
                                 warning.style.setProperty("z-index", "20");
                                 warning.style.setProperty("font-weight", "bold");
-                                warning.style.setProperty("opacity", "0.5");
-                                warning.style.setProperty("pointer-events", "none")
+                                warning.style.setProperty("opacity", "0");
+                                warning.style.setProperty("pointer-events", "none");
+                                warning.style.setProperty("transition-duration", "1s");
+                                warning.id = "warning-text";
                                 warning.innerHTML = 'Expansion progress failed due to insufficient data.';
                                 bodyGroup.appendChild(warning);
+                                setTimeout(function()
+                                {
+                                    document.getElementById("warning-text").style.setProperty("opacity", "0.5");
+                                }, 100);
                 
                                 return;
                             }
@@ -863,6 +878,5 @@ function scroll_Top() {
     window.scrollTo({top: 0, left: 0, behavior: 'smooth'});
 }
 
-url_elements = window.location.href.split("/");
 // showTargets(url_elements[url_elements.length - 1]);
 getFirstNode(url_elements[url_elements.length - 1]);

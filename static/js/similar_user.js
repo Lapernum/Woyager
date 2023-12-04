@@ -84,6 +84,13 @@ function navigateTo(page) {
     document.getElementById("b-color-pink").style.setProperty("z-index", "10");
     document.body.style.setProperty("background", "rgb(225, 211, 230)");
     document.getElementById("b-color-pink").style.setProperty("opacity", "1");
+    let warning_text = document.getElementById("warning-text");
+    if (warning_text != null) {
+        warning_text.style.setProperty("transition-duration", "3s");
+        setTimeout(function() {
+            warning_text.style.setProperty("opacity", "0");
+        }, 100);
+    }
     setTimeout(function()
         {
             if (page) {
@@ -354,6 +361,10 @@ function getFirstNode(username) {
                         // Check if data is empty
                         if (data === null || data.length === 0) {
                             console.log('No data returned from server');
+                            // eliminate the progress bar
+                            progressBar.remove();
+                            isFetching = false;
+                            document.getElementById('progress-bar').style.display = 'none';
                             // Display a message to the user
                             let bodyGroup = document.body;
                             const warning = document.createElement('text');
@@ -363,19 +374,19 @@ function getFirstNode(username) {
                             warning.style.setProperty("position", "fixed");
                             warning.style.setProperty("text-anchor", "middle");
                             warning.style.setProperty("top", "90vh");
-                            warning.style.setProperty("left", "31vw");
-                            warning.style.setProperty("z-index", "20");
+                            warning.style.setProperty("left", "calc(50vw - 18rem)");
+                            warning.style.setProperty("z-index", "8");
                             warning.style.setProperty("font-weight", "bold");
-                            warning.style.setProperty("opacity", "0.5");
-                            warning.style.setProperty("pointer-events", "none")
+                            warning.style.setProperty("opacity", "0");
+                            warning.style.setProperty("pointer-events", "none");
+                            warning.style.setProperty("transition-duration", "1s");
+                            warning.id = "warning-text";
                             warning.innerHTML = 'Expansion progress failed due to insufficient data.';
                             bodyGroup.appendChild(warning);
-                            // eliminate the progress bar
-                            progressBar.remove();
-                            isFetching = false;
-                            document.getElementById('progress-bar').style.display = 'none';
-
-            
+                            setTimeout(function()
+                            {
+                                document.getElementById("warning-text").style.setProperty("opacity", "0.5");
+                            }, 100);
                             return;
                         }        
 
