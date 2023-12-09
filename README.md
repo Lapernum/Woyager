@@ -1,7 +1,6 @@
 # Woyager: Tree-Structure Two-Modes Music Recommendation
 <div align="center">
   
-  [[Try it yourself!]](http://54.84.104.59/)
   ______________________________________________________________________
 
 
